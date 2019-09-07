@@ -1,6 +1,10 @@
 Excel-Reads
 ============================
 
+```scala
+libraryDependencies += "com.github.y-yu" %% "excel-reads" % "0.1.0"
+```
+
 This is a Excel row parser library using Scala macro.
 
 ```scala
