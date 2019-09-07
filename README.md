@@ -1,6 +1,8 @@
 Excel-Reads
 ============================
 
+[![Build Status](https://travis-ci.org/y-yu/excel-reads.svg?branch=master)](https://travis-ci.org/y-yu/excel-reads)
+
 ```scala
 libraryDependencies += "com.github.y-yu" %% "excel-reads" % "0.1.0"
 ```
