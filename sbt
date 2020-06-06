@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
-# // Generated from http://www.opensource.org/licenses/bsd-license.php
+#
+# A more capable sbt runner, coincidentally also called sbt.
+# Author: Paul Phillips <paulp@improving.org>
+# https://github.com/paulp/sbt-extras
+#
+# Generated from http://www.opensource.org/licenses/bsd-license.php
 # Copyright (c) 2011, Paul Phillips. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
 #
-#    * Redistributions of source code must retain the above copyright
+#     * Redistributions of source code must retain the above copyright
 # notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
+#     * Redistributions in binary form must reproduce the above copyright
 # notice, this list of conditions and the following disclaimer in the
 # documentation and/or other materials provided with the distribution.
-#    * Neither the name of the author nor the names of its contributors
+#     * Neither the name of the author nor the names of its contributors
 # may be used to endorse or promote products derived from this software
 # without specific prior written permission.
 #
@@ -27,15 +32,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#
-# A more capable sbt runner, coincidentally also called sbt.
-# Author: Paul Phillips <paulp@improving.org>
-# https://github.com/paulp/sbt-extras
-
 set -o pipefail
 
 declare -r sbt_release_version="1.3.12"
-declare -r sbt_unreleased_version="1.3.12"
+declare -r sbt_unreleased_version="1.4.0-M1"
 
 declare -r latest_213="2.13.2"
 declare -r latest_212="2.12.11"
