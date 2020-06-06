@@ -6,7 +6,7 @@ import com.github.yyu.excelreads.entity.{CellType, RowWithSheetName}
 import com.github.yyu.excelreads.exception.ExcelRowParseError
 import com.github.yyu.excelreads.exception.ExcelRowParseError.{UnexpectedEmptyCell, UnexpectedTypeCell}
 import info.folone.scala.poi.{BooleanCell, DateCell, NumericCell, StringCell}
-import scalaz.{Failure, State, Success, Validation, ValidationNel}
+import scalaz.{Failure, NonEmptyList, State, Success, Validation, ValidationNel}
 import scalaz.syntax.traverse._
 import scalaz.std.option._
 import scalaz.std.stream.unfold
@@ -36,6 +36,9 @@ trait ExcelReads[A] {
 object ExcelReads {
   def apply[A](implicit p: ExcelReads[A]): ExcelReads[A] = p
 
+  private def successNel[A](e: A): ValidationNel[ExcelRowParseError, A] =
+    Validation.success[NonEmptyList[ExcelRowParseError], A](e)
+
   private def failureNel[A](e: ExcelRowParseError): ValidationNel[ExcelRowParseError, A] =
     Validation.failureNel(e)
 
@@ -51,9 +54,9 @@ object ExcelReads {
         s + 1,
         rowWithSheetName.row.cells.find(_.index == s).map {
           case StringCell(_, data) =>
-            Success(data.trim)
+            successNel(data.trim)
           case cell =>
-            failureNel(
+            failureNel[String](
               UnexpectedTypeCell(
                 errorIndex = s,
                 expectedCellType = StringCellType,
@@ -74,9 +77,9 @@ object ExcelReads {
             // This converting may not be suitable.
             // Even if `data` is larger than `Int.MaxValue` then
             // the result will be `Int.MaxValue`.
-            Success(data.toInt)
+            successNel(data.toInt)
           case cell =>
-            failureNel(
+            failureNel[Int](
               UnexpectedTypeCell(
                 errorIndex = s,
                 expectedCellType = NumericCellType,
@@ -94,9 +97,9 @@ object ExcelReads {
         s + 1,
         rowWithSheetName.row.cells.find(_.index == s).map {
           case NumericCell(_, data) =>
-            Success(data)
+            successNel(data)
           case cell =>
-            failureNel(
+            failureNel[Double](
               UnexpectedTypeCell(
                 errorIndex = s,
                 expectedCellType = NumericCellType,
@@ -114,9 +117,9 @@ object ExcelReads {
         s + 1,
         rowWithSheetName.row.cells.find(_.index == s).map {
           case DateCell(_, data) =>
-            Success(data)
+            successNel(data)
           case cell =>
-            failureNel(
+            failureNel[Date](
               UnexpectedTypeCell(
                 errorIndex = s,
                 expectedCellType = DateCellType,
@@ -134,9 +137,9 @@ object ExcelReads {
         s + 1,
         rowWithSheetName.row.cells.find(_.index == s).map {
           case BooleanCell(_, data) =>
-            Success(data)
+            successNel(data)
           case cell =>
-            failureNel(
+            failureNel[Boolean](
               UnexpectedTypeCell(
                 errorIndex = s,
                 expectedCellType = BooleanCellType,

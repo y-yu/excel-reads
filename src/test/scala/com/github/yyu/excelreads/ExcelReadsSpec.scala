@@ -5,12 +5,13 @@ import java.util.Date
 import com.github.yyu.excelreads.entity.RowWithSheetName
 import com.github.yyu.excelreads.exception.ExcelRowParseError.{UnexpectedEmptyCell, UnexpectedTypeCell}
 import info.folone.scala.poi._
-import org.scalatest._
+import org.scalatest.diagrams.Diagrams
+import org.scalatest.flatspec.AnyFlatSpec
 import scalaz.{Failure, Success}
 
 class ExcelReadsSpec
-  extends FlatSpec
-  with DiagrammedAssertions {
+  extends AnyFlatSpec
+  with Diagrams {
 
   "ExcelReads" should "parse a `case class` which contains `String`" in {
     case class HelloWorld(
@@ -207,5 +208,24 @@ class ExcelReadsSpec
 
     val actual = ExcelReads[RowData].read(rowWithSheetName)
     assert(actual.isFailure)
+  }
+
+  it should "not compile if the case class contains `Option[Option[String]]`" in {
+    case class HelloOptionOptionWorld(
+      hello: Option[Option[String]],
+      world: String
+    )
+
+    assertDoesNotCompile(
+      """
+        |val rowWithSheetName = RowWithSheetName(
+        |  "sheet",
+        |  Row(1) {
+        |    Set(StringCell(1, "hello"), StringCell(2, "world"))
+        |  }
+        |)
+        |ExcelReads[HelloOptionOptionWorld].read(rowWithSheetName)
+        |""".stripMargin
+    )
   }
 }

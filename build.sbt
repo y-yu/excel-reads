@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
     description := "A Excel file parser library using Scala macro",
     homepage := Some(url("https://github.com/y-yu")),
     licenses := Seq("MIT" -> url(s"https://github.com/y-yu/excel-reads/blob/master/LICENSE")),
-    scalaVersion := "2.13.0",
+    scalaVersion := "2.13.2",
     scalacOptions ++= Seq(
       "-deprecation",
       "-encoding", "UTF-8",
@@ -19,8 +19,8 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",
       "info.folone" %% "poi-scala" % "0.19",
-      "org.scalaz" %% "scalaz-core" % "7.2.28",
-      "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+      "org.scalaz" %% "scalaz-core" % "7.3.1",
+      "org.scalatest" %% "scalatest" % "3.1.2" % "test"
     )
   )
   .settings(publishSettings)
