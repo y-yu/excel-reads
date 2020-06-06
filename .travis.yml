@@ -1,17 +1,12 @@
 language: scala
 
-dist: xenial
-
-sudo: false
+dist: bionic
 
 cache:
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot
     - $HOME/.sbt/launchers
-
-scala:
-  - 2.13.0
 
 script:
   - ./sbt test
