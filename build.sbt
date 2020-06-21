@@ -19,7 +19,6 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "com.chuusai" %% "shapeless" % "2.3.3",
       "info.folone" %% "poi-scala" % "0.19",
-      "org.scalaz" %% "scalaz-core" % "7.3.1",
       "org.scalatest" %% "scalatest" % "3.1.2" % "test"
     )
   )
