@@ -22,7 +22,7 @@ import shapeless.{::, Generic, HList, HNil, Lazy}
 trait ExcelReads[A] {
   protected def parseState(rowWithSheetName: RowWithSheetName): State[Int, ValidationNel[ExcelRowParseError, A]]
 
-  def read(rowWithSheetName: RowWithSheetName, initial: Int = 1): ValidationNel[ExcelRowParseError, A] =
+  def read(rowWithSheetName: RowWithSheetName, initial: Int = 0): ValidationNel[ExcelRowParseError, A] =
     parseState(rowWithSheetName).eval(initial)
 
   def map[B](f: A => B): ExcelReads[B] = { rowWithSheetName =>

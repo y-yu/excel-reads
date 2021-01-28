@@ -22,7 +22,7 @@ class ExcelReadsSpec
     val rowWithSheetName = RowWithSheetName(
       "sheet",
       Row(1) {
-        Set(StringCell(1, "hello"), StringCell(2, "world"))
+        Set(StringCell(0, "hello"), StringCell(1, "world"))
       }
     )
 
@@ -40,13 +40,13 @@ class ExcelReadsSpec
     val rowWithSheetName1 = RowWithSheetName(
       "sheet",
       Row(1) {
-        Set(StringCell(1, "hello"), StringCell(2, "world"))
+        Set(StringCell(0, "hello"), StringCell(1, "world"))
       }
     )
     val rowWithSheetName2 = RowWithSheetName(
       "sheet",
       Row(1) {
-        Set(StringCell(2, "world"))
+        Set(StringCell(1, "world"))
       }
     )
 
@@ -66,7 +66,7 @@ class ExcelReadsSpec
     val rowWithSheetName = RowWithSheetName(
       "sheet",
       Row(1) {
-        Set(NumericCell(1, 100.5), NumericCell(2, Int.MaxValue.toDouble + 1))
+        Set(NumericCell(0, 100.5), NumericCell(1, Int.MaxValue.toDouble + 1))
       }
     )
 
@@ -83,7 +83,7 @@ class ExcelReadsSpec
     val rowWithSheetName = RowWithSheetName(
       "sheet",
       Row(1) {
-        Set(NumericCell(1, 100.5), NumericCell(2, Int.MaxValue.toDouble + 1))
+        Set(NumericCell(0, 100.5), NumericCell(1, Int.MaxValue.toDouble + 1))
       }
     )
 
@@ -102,7 +102,7 @@ class ExcelReadsSpec
     val rowWithSheetName = RowWithSheetName(
       "sheet",
       Row(1) {
-        Set(DateCell(1, day))
+        Set(DateCell(0, day))
       }
     )
 
@@ -118,7 +118,7 @@ class ExcelReadsSpec
     val rowWithSheetName = RowWithSheetName(
       "sheet",
       Row(1) {
-        Set(BooleanCell(1, data = true))
+        Set(BooleanCell(0, data = true))
       }
     )
 
@@ -137,16 +137,37 @@ class ExcelReadsSpec
       "sheet",
       Row(1) {
         Set(
-          BooleanCell(1, data = true),
-          NumericCell(2, 10),
-          StringCell(3, "foo"),
-          StringCell(4, "bar"),
+          BooleanCell(0, data = true),
+          NumericCell(1, 10),
+          StringCell(2, "foo"),
+          StringCell(3, "bar"),
         )
       }
     )
 
     val actual = ExcelReads[RowData].read(rowWithSheetName)
     assert(actual == Success(RowData(bool = true, 10, Seq("foo", "bar"))))
+  }
+
+  it should "parse what contains empty `Seq[String]`" in {
+    case class RowData(
+      bool: Boolean,
+      number: Int,
+      strings: Seq[String]
+    )
+
+    val rowWithSheetName = RowWithSheetName(
+      "sheet",
+      Row(1) {
+        Set(
+          BooleanCell(0, data = true),
+          NumericCell(1, 10)
+        )
+      }
+    )
+
+    val actual = ExcelReads[RowData].read(rowWithSheetName)
+    assert(actual == Success(RowData(bool = true, 10, Nil)))
   }
 
   it should "throw an error if the the cell type isn't match type of a case class field" in {
@@ -157,7 +178,7 @@ class ExcelReadsSpec
     val rowWithSheetName = RowWithSheetName(
       "sheet",
       Row(1) {
-        Set(StringCell(1, "true"))
+        Set(StringCell(0, "true"))
       }
     )
 
@@ -198,10 +219,10 @@ class ExcelReadsSpec
       "sheet",
       Row(1) {
         Set(
-          BooleanCell(1, data = true),
-          StringCell(2, "foo"),
-          StringCell(3, "bar"),
-          NumericCell(4, 10)
+          BooleanCell(0, data = true),
+          StringCell(1, "foo"),
+          StringCell(2, "bar"),
+          NumericCell(3, 10)
         )
       }
     )
@@ -221,7 +242,7 @@ class ExcelReadsSpec
         |val rowWithSheetName = RowWithSheetName(
         |  "sheet",
         |  Row(1) {
-        |    Set(StringCell(1, "hello"), StringCell(2, "world"))
+        |    Set(StringCell(0, "hello"), StringCell(1, "world"))
         |  }
         |)
         |ExcelReads[HelloOptionOptionWorld].read(rowWithSheetName)
