@@ -1,30 +1,85 @@
 import ReleaseTransformations._
 import UpdateReadme.updateReadme
+import sbt._
+import Keys._
+import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
 
-lazy val root = (project in file("."))
-  .settings(
-    organization := "com.github.y-yu",
-    name := "excel-reads",
-    description := "A Excel file parser library using Scala macro",
-    homepage := Some(url("https://github.com/y-yu")),
-    licenses := Seq("MIT" -> url(s"https://github.com/y-yu/excel-reads/blob/master/LICENSE")),
-    scalaVersion := "2.13.4",
-    scalacOptions ++= Seq(
-      "-deprecation",
-      "-encoding", "UTF-8",
-      "-Xlint:_,-byname-implicit",
-      "-language:implicitConversions", "-language:higherKinds", "-language:existentials",
-      "-unchecked"
-    ),
-    libraryDependencies ++= Seq(
-      "com.chuusai" %% "shapeless" % "2.3.3",
-      "info.folone" %% "poi-scala" % "0.20",
-      "org.apache.poi" % "poi" % "3.14",
-      "org.apache.poi" % "poi-ooxml" % "3.14",
-      "org.scalatest" %% "scalatest" % "3.2.2" % "test"
+val defaultDependencyConfiguration = "test->test;compile->compile"
+
+lazy val root =
+  (project in file("."))
+    .settings(
+      name := "excel-reads"
     )
-  )
-  .settings(publishSettings)
+    .aggregate(
+      core,
+      poiScala,
+      apachePoi
+    )
+
+lazy val core =
+  (project in file("core"))
+    .settings(
+      name := "excel-reads-core",
+      description := "A Excel file parser library core using Scala macro",
+      libraryDependencies ++= Seq(
+        "com.chuusai" %% "shapeless" % "2.3.3",
+        "org.atnos" %% "eff" % "5.13.0",
+        "org.scalatest" %% "scalatest" % "3.2.2" % "test"
+      )
+    )
+    .settings(baseSettings ++ publishSettings)
+
+lazy val poiScala =
+  (project in file("modules/poi-scala"))
+    .settings(
+      name := "excel-reads-poi-scala",
+      description := "Excel reads scala-poi implementation",
+      Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
+      libraryDependencies ++= Seq(
+        "info.folone" %% "poi-scala" % "0.20"
+      )
+    )
+    .settings(baseSettings ++ publishSettings)
+    .dependsOn(
+      core % defaultDependencyConfiguration
+    )
+
+lazy val apachePoi =
+  (project in file("modules/apache-poi"))
+    .settings(
+      name := "excel-reads-apache-scala",
+      description := "Excel reads scala-poi implementation",
+      Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
+      libraryDependencies ++= Seq(
+        "org.apache.poi" % "poi" % "3.14",
+        "org.apache.poi" % "poi-ooxml" % "3.14",
+      )
+    )
+    .settings(baseSettings ++ publishSettings)
+    .dependsOn(
+      core % defaultDependencyConfiguration
+    )
+
+val baseSettings = Seq(
+  organization := "com.github.y-yu",
+  homepage := Some(url("https://github.com/y-yu")),
+  licenses := Seq("MIT" -> url(s"https://github.com/y-yu/excel-reads/blob/master/LICENSE")),
+  scalaVersion := "2.13.4",
+  scalacOptions ++= Seq(
+    "-deprecation",
+    "-encoding", "UTF-8",
+    "-Xlint:infer-any",
+    "-Xsource:3",
+    "-feature",
+    "-language:implicitConversions",
+    "-language:higherKinds",
+    "-language:existentials",
+    "-unchecked",
+    "-Ybackend-parallelism", "16"
+  ),
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
+)
 
 lazy val publishSettings = Seq(
   publishMavenStyle := true,
