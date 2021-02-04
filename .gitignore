@@ -96,6 +96,8 @@ project/plugins/project/
 .cache
 .lib/
 
+.java-version
+
 ### Scala ###
 *.class
 *.log
