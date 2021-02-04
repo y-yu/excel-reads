@@ -9,7 +9,11 @@ val defaultDependencyConfiguration = "test->test;compile->compile"
 lazy val root =
   (project in file("."))
     .settings(
-      name := "excel-reads"
+      name := "excel-reads",
+      publishArtifact := false,
+      publish := {},
+      publishLocal := {},
+      publish / skip := true
     )
     .aggregate(
       core,
@@ -89,7 +93,7 @@ lazy val publishSettings = Seq(
     else
       Opts.resolver.sonatypeStaging
   ),
-  publishArtifact in Test := false,
+  Test / publishArtifact := false,
   pomExtra :=
     <developers>
       <developer>
