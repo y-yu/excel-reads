@@ -25,11 +25,11 @@ assert(actual == Valid(HelloWorld("hello", "world")))
 ## How to use
 
 ```scala
-libraryDependencies += "com.github.y-yu" %% "excel-reads-apache-poi" % "0.3"
+libraryDependencies += "com.github.y-yu" %% "excel-reads-apache-poi" % "0.3.1"
 ```
 
 or
 
 ```scala
-libraryDependencies += "com.github.y-yu" %% "excel-reads-poi-scala" % "0.3"
+libraryDependencies += "com.github.y-yu" %% "excel-reads-poi-scala" % "0.3.1"
 ```

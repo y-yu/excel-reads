@@ -7,7 +7,7 @@ import excelreads.exception.ExcelParseError
 /**
   * Basic getter interface from an Excel cell
   *
-  * @note These methods return the [[Option]] value.
+  * @note These methods return the `Option` value.
   *       In the Excel convention, it's very difficult to
   *       distinguish that the cell is empty or not.
   *       This optional design requires that its implementation
