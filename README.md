@@ -3,7 +3,7 @@ Excel-Reads
 ![CI](https://github.com/y-yu/excel-reads/workflows/CI/badge.svg)
 
 ```scala
-libraryDependencies += "com.github.y-yu" %% "excel-reads" % "0.1.0"
+libraryDependencies += "com.github.y-yu" %% "excel-reads-" % "0.3"
 ```
 
 This is a Excel row parser library using Scala macro.
@@ -14,14 +14,12 @@ case class HelloWorld(
   world: String
 )
 
-val rowWithSheetName = RowWithSheetName(
-  "sheet",
-  Row(1) {
-    Set(StringCell(1, "hello"), StringCell(2, "world"))
+val row =
+  Row(0) {
+    Set(StringCell(0, "hello"), StringCell(1, "world"))
   }
-)
 
-val actual = ExcelReads[HelloWorld].read(rowWithSheetName)
+val actual = ExcelReads[HelloWorld].eval(row)
 
-assert(actual == Success(HelloWorld("hello", "world")))
+assert(actual == Valid(HelloWorld("hello", "world")))
 ```

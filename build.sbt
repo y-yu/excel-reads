@@ -38,7 +38,7 @@ lazy val poiScala =
   (project in file("modules/poi-scala"))
     .settings(
       name := "excel-reads-poi-scala",
-      description := "Excel reads scala-poi implementation",
+      description := "Excel reads poi scala implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
         "info.folone" %% "poi-scala" % "0.20"
@@ -52,12 +52,12 @@ lazy val poiScala =
 lazy val apachePoi =
   (project in file("modules/apache-poi"))
     .settings(
-      name := "excel-reads-apache-scala",
-      description := "Excel reads scala-poi implementation",
+      name := "excel-reads-apache-poi",
+      description := "Excel reads Apache POI implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "org.apache.poi" % "poi" % "3.14",
-        "org.apache.poi" % "poi-ooxml" % "3.14",
+        "org.apache.poi" % "poi" % "5.0.0",
+        "org.apache.poi" % "poi-ooxml" % "5.0.0",
       )
     )
     .settings(baseSettings ++ publishSettings)
