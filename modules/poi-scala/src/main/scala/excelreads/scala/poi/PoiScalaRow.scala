@@ -1,11 +1,6 @@
 package excelreads.scala.poi
 
 import cats.data.Reader
-import cats.data.State
-import cats.data.ValidatedNel
-import excelreads.ExcelReads
-import excelreads.ExcelReadsInstances
-import excelreads.exception.ExcelParseError
 import excelreads.scala.poi.sym.PoiScalaExcelBasicSYM
 import excelreads.sym.ExcelBasicSYM
 import info.folone.scala.poi.Row
@@ -13,7 +8,7 @@ import org.atnos.eff.Eff
 import org.atnos.eff.|=
 
 /**
-  * Wrapper class for Poi Scala [[Row]]
+  * Wrapper class for Poi Scala `Row`
   *
   * @note This case class will be stacked into the `Eff` effects stack(aka `R`).
   *       Then Scala compiler will finds implicit instance where the look companion objects of
