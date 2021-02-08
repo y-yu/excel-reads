@@ -12,7 +12,7 @@ import org.atnos.eff.|=
   * @tparam R effects stack for [[Eff]]
   * @tparam A return type
   */
-abstract class ExcelReads[R, A] {
+trait ExcelReads[R, A] {
   def parse(implicit
     m: State[Int, *] |= R
   ): Eff[R, ValidatedNel[ExcelParseError, A]]
