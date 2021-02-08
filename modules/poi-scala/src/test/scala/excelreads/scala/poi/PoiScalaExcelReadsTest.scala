@@ -17,25 +17,23 @@ import org.scalatest.flatspec.AnyFlatSpec
 import scalaz.-\/
 import scalaz.\/-
 
-class PoiScalaExcelReadsTest
-  extends AnyFlatSpec
-  with Diagrams
-  with TestUtils {
+class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
 
   type R = Fx.fx2[Reader[PoiScalaRow, *], State[Int, *]]
 
   "reads" should "return `String` from the `Option[String]` instance" in {
     val row = PoiScalaRow(Row(0) {
       Set(
-        StringCell(0, "hello"),
+        StringCell(0, "hello")
       )
     })
 
-    assert(ExcelReads[R, String]
-      .parse
-      .runReader(row)
-      .evalState(0)
-      .run == Valid("hello"))
+    assert(
+      ExcelReads[R, String].parse
+        .runReader(row)
+        .evalState(0)
+        .run == Valid("hello")
+    )
   }
 
   it should "return a case class from the Excel row" in {
@@ -51,8 +49,7 @@ class PoiScalaExcelReadsTest
       )
     })
 
-    val actual = ExcelReads[R, HelloExcel]
-      .parse
+    val actual = ExcelReads[R, HelloExcel].parse
       .runReader(row)
       .evalState(0)
       .run
@@ -72,8 +69,7 @@ class PoiScalaExcelReadsTest
       )
     })
 
-    val actual = ExcelReads[R, Numbers]
-      .parse
+    val actual = ExcelReads[R, Numbers].parse
       .runReader(row)
       .evalState(0)
       .run
@@ -90,18 +86,20 @@ class PoiScalaExcelReadsTest
         BooleanCell(0, data = true)
       )
     })
-    assert(ExcelReads[R, HasOption]
-      .parse
-      .runReader(row1)
-      .evalState(0)
-      .run == Valid(HasOption(Some(true))))
+    assert(
+      ExcelReads[R, HasOption].parse
+        .runReader(row1)
+        .evalState(0)
+        .run == Valid(HasOption(Some(true)))
+    )
 
     val row2 = PoiScalaRow(Row(1) { Set.empty })
-    assert(ExcelReads[R, HasOption]
-      .parse
-      .runReader(row2)
-      .evalState(0)
-      .run == Valid(HasOption(None)))
+    assert(
+      ExcelReads[R, HasOption].parse
+        .runReader(row2)
+        .evalState(0)
+        .run == Valid(HasOption(None))
+    )
   }
 
   it should "not compile if the case class has ADTs" in {
@@ -156,8 +154,7 @@ class PoiScalaExcelReadsTest
     (sheet1Rows zip expected).foreach {
       case (row, expected) =>
         assert(
-          ExcelReads[R, RealExcelDataModel]
-            .parse
+          ExcelReads[R, RealExcelDataModel].parse
             .runReader(row)
             .evalState(0)
             .run == Valid(expected)

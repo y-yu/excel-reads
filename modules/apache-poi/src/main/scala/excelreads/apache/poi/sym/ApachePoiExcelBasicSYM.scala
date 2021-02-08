@@ -19,8 +19,8 @@ import scala.jdk.CollectionConverters._
   *
   * @tparam R effects stack which contains `Reader[Row, *]`
   */
-class ApachePoiExcelBasicSYM[R] (
-  implicit m: Reader[ApachePoiRow, *] |= R
+class ApachePoiExcelBasicSYM[R](implicit
+  m: Reader[ApachePoiRow, *] |= R
 ) extends ExcelBasicSYM[Eff[R, *]] {
   private def successNel[A](a: A): ValidatedNel[ExcelParseError, A] =
     Validated.Valid(a)
@@ -34,8 +34,7 @@ class ApachePoiExcelBasicSYM[R] (
   ): Eff[R, ValidatedNel[ExcelParseError, Option[A]]] =
     for {
       row <- ask
-    } yield row
-      .value
+    } yield row.value
       .cellIterator()
       .asScala
       .find(_.getColumnIndex == index) match {

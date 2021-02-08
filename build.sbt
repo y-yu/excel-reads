@@ -82,6 +82,7 @@ val baseSettings = Seq(
     "-unchecked",
     "-Ybackend-parallelism", "16"
   ),
+  scalafmtOnCompile := true,
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
 )
 

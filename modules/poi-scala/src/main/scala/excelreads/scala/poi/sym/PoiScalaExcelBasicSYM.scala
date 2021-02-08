@@ -19,8 +19,8 @@ import org.atnos.eff.|=
   *
   * @tparam R effects stack which contains `Reader[Row, *]`
   */
-class PoiScalaExcelBasicSYM[R](
-  implicit m: Reader[PoiScalaRow, *] |= R
+class PoiScalaExcelBasicSYM[R](implicit
+  m: Reader[PoiScalaRow, *] |= R
 ) extends ExcelBasicSYM[Eff[R, *]] {
 
   private def successNel[A](a: A): ValidatedNel[ExcelParseError, A] =

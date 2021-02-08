@@ -11,10 +11,7 @@ import org.atnos.eff.Fx
 import org.scalatest.diagrams.Diagrams
 import org.scalatest.flatspec.AnyFlatSpec
 
-class PoiScalaExcelBasicSYMTest
-  extends AnyFlatSpec
-    with Diagrams
-    with TestUtils {
+class PoiScalaExcelBasicSYMTest extends AnyFlatSpec with Diagrams with TestUtils {
 
   val sut = new PoiScalaExcelBasicSYM[
     Fx.fx1[Reader[PoiScalaRow, *]]

@@ -15,10 +15,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import java.io.File
 import org.atnos.eff.syntax.all._
 
-class ApachePoiExcelReadsTest
-  extends AnyFlatSpec
-    with Diagrams
-    with TestUtils {
+class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
 
   type R = Fx.fx2[Reader[ApachePoiRow, *], State[Int, *]]
 
@@ -36,22 +33,23 @@ class ApachePoiExcelReadsTest
 
   "reads" should "return `Int` from the `Option[Int]` instance" in new SetUp {
     assert(
-      ExcelReads[R, Int]
-        .parse
+      ExcelReads[R, Int].parse
         .runReader(row)
         .evalState(0)
-        .run == Valid(1))
+        .run == Valid(1)
+    )
   }
 
   it should "parse the case class consist of `Int`" in new SetUp {
     case class OneInt(
       value: Int
     )
-    assert(ExcelReads[R, OneInt]
-      .parse
-      .runReader(row)
-      .evalState(0)
-      .run == Valid(OneInt(1)))
+    assert(
+      ExcelReads[R, OneInt].parse
+        .runReader(row)
+        .evalState(0)
+        .run == Valid(OneInt(1))
+    )
   }
 
   it should "get the cell style" in new SetUp {
@@ -59,11 +57,11 @@ class ApachePoiExcelReadsTest
       style: CellStyle,
       value: Int
     )
-    assert(ExcelReads[R, IntAndStyle]
-      .parse
-      .runReader(row)
-      .evalState(0)
-      .run == Valid(IntAndStyle(style, 1))
+    assert(
+      ExcelReads[R, IntAndStyle].parse
+        .runReader(row)
+        .evalState(0)
+        .run == Valid(IntAndStyle(style, 1))
     )
   }
 
@@ -71,8 +69,7 @@ class ApachePoiExcelReadsTest
     val row2 = ApachePoiRow(sheet.createRow(1))
 
     assert(
-      ExcelReads[R, Option[CellStyle]]
-        .parse
+      ExcelReads[R, Option[CellStyle]].parse
         .runReader(row2)
         .evalState(0)
         .run == Valid(None)
@@ -93,7 +90,7 @@ class ApachePoiExcelReadsTest
     val sheet = workbook.getSheet("Sheet1")
     val rows = List(
       ApachePoiRow(sheet.getRow(0)),
-      ApachePoiRow(sheet.getRow(1)),
+      ApachePoiRow(sheet.getRow(1))
     )
   }
 
@@ -104,11 +101,11 @@ class ApachePoiExcelReadsTest
     )
     (rows zip expected).foreach {
       case (row, expected) =>
-        assert(ExcelReads[R, RealExcelDataModel]
-          .parse
-          .runReader(row)
-          .evalState(0)
-          .run == Valid(expected)
+        assert(
+          ExcelReads[R, RealExcelDataModel].parse
+            .runReader(row)
+            .evalState(0)
+            .run == Valid(expected)
         )
     }
   }

@@ -21,6 +21,6 @@ case class PoiScalaRow(
 object PoiScalaRow {
   implicit def poiScalaSymInstances[R](implicit
     m: Reader[PoiScalaRow, *] |= R
-  ): ExcelBasicSYM[Eff[R, *]]  =
+  ): ExcelBasicSYM[Eff[R, *]] =
     new PoiScalaExcelBasicSYM[R]
 }

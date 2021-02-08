@@ -16,8 +16,8 @@ import org.atnos.eff.reader._
   *
   * @tparam R effects stack which contains `Reader[Row, *]`
   */
-class ApachePoiExcelStyleSYM[R](
-  implicit m: Reader[ApachePoiRow, *] |= R
+class ApachePoiExcelStyleSYM[R](implicit
+  m: Reader[ApachePoiRow, *] |= R
 ) extends ExcelStyleSYM[CellStyle, Eff[R, *]] {
 
   private def successNel[A](a: A): ValidatedNel[ExcelParseError, A] =

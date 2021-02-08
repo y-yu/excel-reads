@@ -17,18 +17,18 @@ import org.atnos.eff.|=
   *       Then Scala compiler will finds implicit instance where the look companion objects of
   *       all types in effects stack. So this wrapper is needed to wiring implicit instances.
   */
-case class ApachePoiRow (
+case class ApachePoiRow(
   value: Row
 ) extends AnyVal
 
 object ApachePoiRow {
   implicit def apachePoiBasicSymInstances[R](implicit
     m: Reader[ApachePoiRow, *] |= R
-  ): ExcelBasicSYM[Eff[R, *]]  =
+  ): ExcelBasicSYM[Eff[R, *]] =
     new ApachePoiExcelBasicSYM[R]
 
   implicit def apachePoiStyleSymInstances[R](implicit
     m: Reader[ApachePoiRow, *] |= R
-  ): ExcelStyleSYM[CellStyle, Eff[R, *]]  =
+  ): ExcelStyleSYM[CellStyle, Eff[R, *]] =
     new ApachePoiExcelStyleSYM[R]
 }
