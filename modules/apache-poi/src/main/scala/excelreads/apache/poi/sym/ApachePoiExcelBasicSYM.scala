@@ -4,25 +4,23 @@ import cats.data.NonEmptyList
 import cats.data.Reader
 import cats.data.Validated
 import cats.data.ValidatedNel
+import excelreads.apache.poi.ApachePoiRow
 import excelreads.exception.ExcelParseError
 import excelreads.exception.ExcelParseError.UnexpectedEmptyCell
 import excelreads.sym.ExcelBasicSYM
 import org.apache.poi.ss.usermodel.Cell
-import org.apache.poi.ss.usermodel.Row
 import org.atnos.eff.Eff
 import org.atnos.eff.reader._
 import org.atnos.eff.|=
 import scala.jdk.CollectionConverters._
 
-object ApachePoiExcelBasicSYM {
-  implicit def apachePoiExcelBasicInstance[R](
-    implicit m: Reader[Row, *] |= R
-  ): ApachePoiExcelBasicSYM[R] =
-    new ApachePoiExcelBasicSYM[R]
-}
-
+/**
+  * Apache POI implementation
+  *
+  * @tparam R effects stack which contains `Reader[Row, *]`
+  */
 class ApachePoiExcelBasicSYM[R] (
-  implicit m: Reader[Row, *] |= R
+  implicit m: Reader[ApachePoiRow, *] |= R
 ) extends ExcelBasicSYM[Eff[R, *]] {
   private def successNel[A](a: A): ValidatedNel[ExcelParseError, A] =
     Validated.Valid(a)
@@ -37,6 +35,7 @@ class ApachePoiExcelBasicSYM[R] (
     for {
       row <- ask
     } yield row
+      .value
       .cellIterator()
       .asScala
       .find(_.getColumnIndex == index) match {
