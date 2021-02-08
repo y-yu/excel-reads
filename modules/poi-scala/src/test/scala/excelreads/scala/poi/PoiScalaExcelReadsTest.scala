@@ -1,12 +1,17 @@
 package excelreads.scala.poi
 
+import cats.data.Reader
+import cats.data.State
 import cats.data.Validated.Valid
+import excelreads.ExcelReads
 import excelreads.util.TestUtils
+import org.atnos.eff.syntax.all._
 import info.folone.scala.poi.BooleanCell
 import info.folone.scala.poi.NumericCell
 import info.folone.scala.poi.Row
 import info.folone.scala.poi.StringCell
 import info.folone.scala.poi.Workbook
+import org.atnos.eff.Fx
 import org.scalatest.diagrams.Diagrams
 import org.scalatest.flatspec.AnyFlatSpec
 import scalaz.-\/
@@ -17,14 +22,20 @@ class PoiScalaExcelReadsTest
   with Diagrams
   with TestUtils {
 
+  type R = Fx.fx2[Reader[PoiScalaRow, *], State[Int, *]]
+
   "reads" should "return `String` from the `Option[String]` instance" in {
-    val row = Row(0) {
+    val row = PoiScalaRow(Row(0) {
       Set(
         StringCell(0, "hello"),
       )
-    }
+    })
 
-    assert(PoiScalaExcelReads[String].eval(row) == Valid("hello"))
+    assert(ExcelReads[R, String]
+      .parse
+      .runReader(row)
+      .evalState(0)
+      .run == Valid("hello"))
   }
 
   it should "return a case class from the Excel row" in {
@@ -33,14 +44,18 @@ class PoiScalaExcelReadsTest
       excel: String
     )
 
-    val row = Row(0) {
+    val row = PoiScalaRow(Row(0) {
       Set(
         StringCell(0, "hello"),
         StringCell(1, "excel")
       )
-    }
+    })
 
-    val actual = PoiScalaExcelReads[HelloExcel].eval(row)
+    val actual = ExcelReads[R, HelloExcel]
+      .parse
+      .runReader(row)
+      .evalState(0)
+      .run
     assert(actual == Valid(HelloExcel("hello", "excel")))
   }
 
@@ -49,15 +64,19 @@ class PoiScalaExcelReadsTest
       numbers: List[Int]
     )
 
-    val row = Row(0) {
+    val row = PoiScalaRow(Row(0) {
       Set(
         NumericCell(0, 1),
         NumericCell(1, 2),
         NumericCell(2, 3)
       )
-    }
+    })
 
-    val actual = PoiScalaExcelReads[Numbers].eval(row)
+    val actual = ExcelReads[R, Numbers]
+      .parse
+      .runReader(row)
+      .evalState(0)
+      .run
     assert(actual == Valid(Numbers(List(1, 2, 3))))
   }
 
@@ -66,15 +85,23 @@ class PoiScalaExcelReadsTest
       value: Option[Boolean]
     )
 
-    val row1 = Row(0) {
+    val row1 = PoiScalaRow(Row(0) {
       Set(
         BooleanCell(0, data = true)
       )
-    }
-    assert(PoiScalaExcelReads[HasOption].eval(row1) == Valid(HasOption(Some(true))))
+    })
+    assert(ExcelReads[R, HasOption]
+      .parse
+      .runReader(row1)
+      .evalState(0)
+      .run == Valid(HasOption(Some(true))))
 
-    val row2 = Row(1) { Set.empty }
-    assert(PoiScalaExcelReads[HasOption].eval(row2) == Valid(HasOption(None)))
+    val row2 = PoiScalaRow(Row(1) { Set.empty })
+    assert(ExcelReads[R, HasOption]
+      .parse
+      .runReader(row2)
+      .evalState(0)
+      .run == Valid(HasOption(None)))
   }
 
   it should "not compile if the case class has ADTs" in {
@@ -84,7 +111,7 @@ class PoiScalaExcelReadsTest
     sealed trait ADT
     case object C1 extends ADT
 
-    assertDoesNotCompile("PoiScalaExcelReads[HasADT]")
+    assertDoesNotCompile("ExcelReads[R, HasADT]")
   }
 
   trait SetUp {
@@ -97,7 +124,7 @@ class PoiScalaExcelReadsTest
 
     val fileName = getClass.getResource("/test.xlsx").getPath
 
-    val (sheet1Rows, sheet2Rows): (List[Row], List[Row]) =
+    val (sheet1Rows, sheet2Rows): (List[PoiScalaRow], List[PoiScalaRow]) =
       Workbook
         .apply(fileName)
         .map { workbook =>
@@ -106,8 +133,8 @@ class PoiScalaExcelReadsTest
             sheet2 <- workbook.sheets.find(_.name == "Sheet2")
           } yield (
             // Rows are `Set` and not ordered.
-            sheet1.rows.toList.sortBy(_.index),
-            sheet2.rows.toList.sortBy(_.index)
+            sheet1.rows.toList.sortBy(_.index).map(PoiScalaRow.apply),
+            sheet2.rows.toList.sortBy(_.index).map(PoiScalaRow.apply)
           )).get
         }
         .run
@@ -128,8 +155,12 @@ class PoiScalaExcelReadsTest
 
     (sheet1Rows zip expected).foreach {
       case (row, expected) =>
-        assert(PoiScalaExcelReads[RealExcelDataModel].eval(row)
-          == Valid(expected)
+        assert(
+          ExcelReads[R, RealExcelDataModel]
+            .parse
+            .runReader(row)
+            .evalState(0)
+            .run == Valid(expected)
         )
     }
   }

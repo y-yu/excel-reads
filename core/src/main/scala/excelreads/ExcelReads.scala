@@ -3,25 +3,29 @@ package excelreads
 import cats.data.State
 import cats.data.ValidatedNel
 import excelreads.exception.ExcelParseError
+import org.atnos.eff.Eff
+import org.atnos.eff.|=
 
 /**
   * Excel parser type class
   *
-  * @tparam Row Excel row type
+  * @tparam R effects stack for [[Eff]]
   * @tparam A return type
   */
-trait ExcelReads[Row, A] { self =>
-  protected[excelreads] def parse(row: Row): State[Int, ValidatedNel[ExcelParseError, A]]
+abstract class ExcelReads[R, A]{
+  def parse(implicit
+    m: State[Int, *] |= R
+  ) : Eff[R, ValidatedNel[ExcelParseError, A]]
+}
 
-  final def map[B](
-    f: A => B
-  ): ExcelReads[Row, B] = { row =>
-    self.parse(row).map(_.map(f))
-  }
+object ExcelReads
+  extends ExcelReadsInstances {
 
-  final def eval(
-    row: Row,
-    init: Int = 0
-  ): ValidatedNel[ExcelParseError, A] =
-    parse(row).run(init).value._2
+  def apply[R, A](implicit
+    reads: ExcelReads[R, A]
+  ): ExcelReads[R, A] = reads
+
+  def from[R, A](
+    f: State[Int, *] |= R => Eff[R, ValidatedNel[ExcelParseError, A]]
+  ): ExcelReads[R, A] = (m: State[Int, *] |= R) => f(m)
 }

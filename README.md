@@ -12,12 +12,19 @@ case class HelloWorld(
   world: String
 )
 
-val row =
+type R = Fx.fx2[Reader[PoiScalaRow, *], State[Int, *]]
+
+val row = PoiScalaRow(
   Row(0) {
     Set(StringCell(0, "hello"), StringCell(1, "world"))
   }
+)
 
-val actual = ExcelReads[HelloWorld].eval(row)
+val actual = ExcelReads[R, HelloWorld]
+  .parse
+  .runReader(row)
+  .evalState(0)
+  .run
 
 assert(actual == Valid(HelloWorld("hello", "world")))
 ```

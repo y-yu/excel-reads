@@ -6,30 +6,21 @@ import cats.data.Validated
 import cats.data.ValidatedNel
 import excelreads.exception.ExcelParseError
 import excelreads.exception.ExcelParseError.UnexpectedEmptyCell
+import excelreads.scala.poi.PoiScalaRow
 import excelreads.sym.ExcelBasicSYM
-import info.folone.scala.poi.Row
 import info.folone.scala.poi.StringCell
 import info.folone.scala.poi._
 import org.atnos.eff.Eff
-import org.atnos.eff.Member
-import org.atnos.eff.NoFx
 import org.atnos.eff.reader._
 import org.atnos.eff.|=
-
-object PoiScalaExcelBasicSYM {
-  implicit def scalaPoiInstances[R](implicit
-    m: Member.Aux[Reader[Row, *], R, NoFx]
-  ): PoiScalaExcelBasicSYM[R]  =
-    new PoiScalaExcelBasicSYM
-}
 
 /**
   * Poi Scala implementation
   *
-  * @tparam R effect stack which contains `Reader[Row, *]`
+  * @tparam R effects stack which contains `Reader[Row, *]`
   */
 class PoiScalaExcelBasicSYM[R](
-  implicit m: Reader[Row, *] |= R
+  implicit m: Reader[PoiScalaRow, *] |= R
 ) extends ExcelBasicSYM[Eff[R, *]] {
 
   private def successNel[A](a: A): ValidatedNel[ExcelParseError, A] =
@@ -44,7 +35,7 @@ class PoiScalaExcelBasicSYM[R](
   ): Eff[R, ValidatedNel[ExcelParseError, Option[A]]] =
     for {
       row <- ask
-    } yield row.cells
+    } yield row.value.cells
       .find(_.index == index) match {
       case Some(a) =>
         pf

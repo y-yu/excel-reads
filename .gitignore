@@ -104,6 +104,4 @@ project/plugins/project/
 
 .bsp
 
-pgp.sbt
-
 # End of https://www.gitignore.io/api/sbt,scala,intellij
