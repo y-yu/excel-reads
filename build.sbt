@@ -1,4 +1,5 @@
 import ReleaseTransformations._
+
 import UpdateReadme.updateReadme
 import sbt._
 import Keys._
@@ -57,7 +58,7 @@ lazy val apachePoi =
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
         "org.apache.poi" % "poi" % "5.0.0",
-        "org.apache.poi" % "poi-ooxml" % "5.0.0",
+        "org.apache.poi" % "poi-ooxml" % "5.0.0"
       )
     )
     .settings(baseSettings ++ publishSettings)
@@ -72,7 +73,8 @@ val baseSettings = Seq(
   scalaVersion := "2.13.4",
   scalacOptions ++= Seq(
     "-deprecation",
-    "-encoding", "UTF-8",
+    "-encoding",
+    "UTF-8",
     "-Xlint:infer-any",
     "-Xsource:3",
     "-feature",
@@ -80,7 +82,8 @@ val baseSettings = Seq(
     "-language:higherKinds",
     "-language:existentials",
     "-unchecked",
-    "-Ybackend-parallelism", "16"
+    "-Ybackend-parallelism",
+    "16"
   ),
   scalafmtOnCompile := true,
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
