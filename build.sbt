@@ -27,10 +27,10 @@ lazy val core =
       name := "excel-reads-core",
       description := "A Excel file parser library core using Scala macro",
       libraryDependencies ++= Seq(
-        "com.chuusai" %% "shapeless" % "2.3.3",
-        "org.atnos" %% "eff" % "5.13.0",
-        "org.scalatest" %% "scalatest" % "3.2.2" % "test"
-      )
+          "com.chuusai" %% "shapeless" % "2.3.7",
+          "org.atnos" %% "eff" % "5.13.0",
+          "org.scalatest" %% "scalatest" % "3.2.2" % "test"
+        )
     )
     .settings(baseSettings ++ publishSettings)
 
@@ -41,8 +41,8 @@ lazy val poiScala =
       description := "Excel reads poi scala implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "info.folone" %% "poi-scala" % "0.20"
-      )
+          "info.folone" %% "poi-scala" % "0.20"
+        )
     )
     .settings(baseSettings ++ publishSettings)
     .dependsOn(
@@ -56,9 +56,9 @@ lazy val apachePoi =
       description := "Excel reads Apache POI implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "org.apache.poi" % "poi" % "5.0.0",
-        "org.apache.poi" % "poi-ooxml" % "5.0.0",
-      )
+          "org.apache.poi" % "poi" % "5.0.0",
+          "org.apache.poi" % "poi-ooxml" % "5.0.0"
+        )
     )
     .settings(baseSettings ++ publishSettings)
     .dependsOn(
@@ -71,17 +71,19 @@ val baseSettings = Seq(
   licenses := Seq("MIT" -> url(s"https://github.com/y-yu/excel-reads/blob/master/LICENSE")),
   scalaVersion := "2.13.4",
   scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding", "UTF-8",
-    "-Xlint:infer-any",
-    "-Xsource:3",
-    "-feature",
-    "-language:implicitConversions",
-    "-language:higherKinds",
-    "-language:existentials",
-    "-unchecked",
-    "-Ybackend-parallelism", "16"
-  ),
+      "-deprecation",
+      "-encoding",
+      "UTF-8",
+      "-Xlint:infer-any",
+      "-Xsource:3",
+      "-feature",
+      "-language:implicitConversions",
+      "-language:higherKinds",
+      "-language:existentials",
+      "-unchecked",
+      "-Ybackend-parallelism",
+      "16"
+    ),
   scalafmtOnCompile := true,
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
 )
@@ -89,11 +91,11 @@ val baseSettings = Seq(
 lazy val publishSettings = Seq(
   publishMavenStyle := true,
   publishTo := Some(
-    if (isSnapshot.value)
-      Opts.resolver.sonatypeSnapshots
-    else
-      Opts.resolver.sonatypeStaging
-  ),
+      if (isSnapshot.value)
+        Opts.resolver.sonatypeSnapshots
+      else
+        Opts.resolver.sonatypeStaging
+    ),
   Test / publishArtifact := false,
   pomExtra :=
     <developers>
@@ -111,21 +113,21 @@ lazy val publishSettings = Seq(
   releaseTagName := tagName.value,
   releaseCrossBuild := true,
   releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    updateReadme,
-    commitReleaseVersion,
-    tagRelease,
-    releaseStepCommandAndRemaining("^ publishSigned"),
-    setNextVersion,
-    updateReadme,
-    commitNextVersion,
-    releaseStepCommand("sonatypeReleaseAll"),
-    pushChanges
-  )
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      runTest,
+      setReleaseVersion,
+      updateReadme,
+      commitReleaseVersion,
+      tagRelease,
+      releaseStepCommandAndRemaining("^ publishSigned"),
+      setNextVersion,
+      updateReadme,
+      commitNextVersion,
+      releaseStepCommand("sonatypeReleaseAll"),
+      pushChanges
+    )
 )
 
 val tagName = Def.setting {
