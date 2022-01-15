@@ -14,10 +14,10 @@ import org.atnos.eff.Eff
 import org.atnos.eff.reader._
 import org.atnos.eff.|=
 
-/**
-  * Poi Scala implementation
+/** Poi Scala implementation
   *
-  * @tparam R effects stack which contains `Reader[Row, *]`
+  * @tparam R
+  *   effects stack which contains `Reader[Row, *]`
   */
 class PoiScalaExcelBasicSYM[R](implicit
   m: Reader[PoiScalaRow, *] |= R

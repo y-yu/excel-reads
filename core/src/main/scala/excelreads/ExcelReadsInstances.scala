@@ -17,16 +17,13 @@ import shapeless.HNil
 import shapeless.Lazy
 import org.atnos.eff.state._
 
-/**
-  * Basic instances
+/** Basic instances
   *
-  * @note This parser uses `HList` to parse the `case class`
-  *       which do not contain data types like neither `Either` nor ADT.
-  *       `Either` and ADT are required `Coproduct` but
-  *       the parser sometimes cannot determine which type it should parse.
-  *       That's the why I don't make `Coproduct` instances.
-  *       If you use ADT in the type representing a Excel row,
-  *       you have to implement a instance to parse it.
+  * @note
+  *   This parser uses `HList` to parse the `case class` which do not contain data types like neither `Either` nor ADT.
+  *   `Either` and ADT are required `Coproduct` but the parser sometimes cannot determine which type it should parse.
+  *   That's the why I don't make `Coproduct` instances. If you use ADT in the type representing a Excel row, you have
+  *   to implement a instance to parse it.
   */
 trait ExcelReadsInstances {
   // Primitive instances
@@ -75,11 +72,9 @@ trait ExcelReadsInstances {
       } yield styleOpt
     }
 
-  /**
-    * This instance only can parse the type whose sequence is at the end.
-    * If we want to parse any place on the type, it requires backtrack
-    * like regular-expression matcher. It's hard to implement so
-    * I haven't implemented it yet for now.
+  /** This instance only can parse the type whose sequence is at the end. If we want to parse any place on the type, it
+    * requires backtrack like regular-expression matcher. It's hard to implement so I haven't implemented it yet for
+    * now.
     */
   implicit def listInstance[R, A](implicit
     reads: ExcelReads[R, Option[A]]
@@ -130,11 +125,9 @@ trait ExcelReadsInstances {
       instance.value.parse.map(_.map(gen.from))
     }
 
-  /**
-    * For simpler, I made type `A` parsers through the `Option[A]` parser.
-    * If you want to parse the type such a `Option[Option[A]]`
-    * then you have to make your instance.
-    * In my opinion it doesn't make sense the nested `Option` parser so I didn't make it.
+  /** For simpler, I made type `A` parsers through the `Option[A]` parser. If you want to parse the type such a
+    * `Option[Option[A]]` then you have to make your instance. In my opinion it doesn't make sense the nested `Option`
+    * parser so I didn't make it.
     */
   implicit def aInstance[R, A](implicit
     reads: ExcelReads[R, Option[A]]

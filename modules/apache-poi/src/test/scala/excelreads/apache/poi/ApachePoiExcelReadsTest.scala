@@ -99,14 +99,13 @@ class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
       RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
     )
-    (rows zip expected).foreach {
-      case (row, expected) =>
-        assert(
-          ExcelReads[R, RealExcelDataModel].parse
-            .runReader(row)
-            .evalState(0)
-            .run == Valid(expected)
-        )
+    (rows zip expected).foreach { case (row, expected) =>
+      assert(
+        ExcelReads[R, RealExcelDataModel].parse
+          .runReader(row)
+          .evalState(0)
+          .run == Valid(expected)
+      )
     }
   }
 }
