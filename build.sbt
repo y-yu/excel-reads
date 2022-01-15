@@ -1,4 +1,5 @@
 import ReleaseTransformations._
+
 import UpdateReadme.updateReadme
 import sbt._
 import Keys._
@@ -56,9 +57,9 @@ lazy val apachePoi =
       description := "Excel reads Apache POI implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-          "org.apache.poi" % "poi" % "5.0.0",
-          "org.apache.poi" % "poi-ooxml" % "5.0.0"
-        )
+        "org.apache.poi" % "poi" % "5.0.0",
+        "org.apache.poi" % "poi-ooxml" % "5.0.0"
+      )
     )
     .settings(baseSettings ++ publishSettings)
     .dependsOn(
@@ -71,19 +72,19 @@ val baseSettings = Seq(
   licenses := Seq("MIT" -> url(s"https://github.com/y-yu/excel-reads/blob/master/LICENSE")),
   scalaVersion := "2.13.8",
   scalacOptions ++= Seq(
-      "-deprecation",
-      "-encoding",
-      "UTF-8",
-      "-Xlint:infer-any",
-      "-Xsource:3",
-      "-feature",
-      "-language:implicitConversions",
-      "-language:higherKinds",
-      "-language:existentials",
-      "-unchecked",
-      "-Ybackend-parallelism",
-      "16"
-    ),
+    "-deprecation",
+    "-encoding",
+    "UTF-8",
+    "-Xlint:infer-any",
+    "-Xsource:3",
+    "-feature",
+    "-language:implicitConversions",
+    "-language:higherKinds",
+    "-language:existentials",
+    "-unchecked",
+    "-Ybackend-parallelism",
+    "16"
+  ),
   scalafmtOnCompile := true,
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
 )
