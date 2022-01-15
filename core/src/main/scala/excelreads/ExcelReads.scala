@@ -27,5 +27,8 @@ object ExcelReads extends ExcelReadsInstances {
 
   def from[R, A](
     f: State[Int, *] |= R => Eff[R, ValidatedNel[ExcelParseError, A]]
-  ): ExcelReads[R, A] = (m: State[Int, *] |= R) => f(m)
+  ): ExcelReads[R, A] = new ExcelReads[R, A] {
+    def parse(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, A]] =
+      f(m)
+  }
 }

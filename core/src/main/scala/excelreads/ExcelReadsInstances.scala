@@ -1,7 +1,6 @@
 package excelreads
 
 import cats.data.NonEmptyList
-import cats.data.Validated
 import cats.data.Validated.Invalid
 import cats.data.Validated.Valid
 import cats.data.ValidatedNel
@@ -10,11 +9,6 @@ import excelreads.exception.ExcelParseError.UnexpectedEmptyCell
 import excelreads.sym.ExcelBasicSYM
 import excelreads.sym.ExcelStyleSYM
 import org.atnos.eff.Eff
-import shapeless.::
-import shapeless.Generic
-import shapeless.HList
-import shapeless.HNil
-import shapeless.Lazy
 import org.atnos.eff.state._
 
 /** Basic instances
@@ -25,7 +19,7 @@ import org.atnos.eff.state._
   *   That's the why I don't make `Coproduct` instances. If you use ADT in the type representing a Excel row, you have
   *   to implement a instance to parse it.
   */
-trait ExcelReadsInstances {
+trait ExcelReadsInstances extends ExcelReadsGenericInstances with ExcelReadsLowPriorityInstance {
   // Primitive instances
   private def basicInstance[R, A](
     f: ExcelBasicSYM[Eff[R, *]] => Int => Eff[R, ValidatedNel[ExcelParseError, A]]
@@ -100,35 +94,9 @@ trait ExcelReadsInstances {
 
       loop(Valid(Nil))
     }
+}
 
-  implicit def hNilInstance[R]: ExcelReads[R, HNil] =
-    ExcelReads.from { implicit m =>
-      get.map(_ => Validated.Valid(HNil))
-    }
-
-  implicit def hConsInstances[R, H, T <: HList](implicit
-    head: ExcelReads[R, H],
-    tail: ExcelReads[R, T]
-  ): ExcelReads[R, H :: T] =
-    ExcelReads.from { implicit m =>
-      for {
-        hv <- head.parse
-        tv <- tail.parse
-      } yield hv.ap(tv.map(t => h => h :: t))
-    }
-
-  implicit def hListInstance[R, A, L <: HList](implicit
-    gen: Generic.Aux[A, L],
-    instance: Lazy[ExcelReads[R, L]]
-  ): ExcelReads[R, A] =
-    ExcelReads.from { implicit m =>
-      instance.value.parse.map(_.map(gen.from))
-    }
-
-  /** For simpler, I made type `A` parsers through the `Option[A]` parser. If you want to parse the type such a
-    * `Option[Option[A]]` then you have to make your instance. In my opinion it doesn't make sense the nested `Option`
-    * parser so I didn't make it.
-    */
+trait ExcelReadsLowPriorityInstance {
   implicit def aInstance[R, A](implicit
     reads: ExcelReads[R, Option[A]]
   ): ExcelReads[R, A] =

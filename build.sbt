@@ -7,6 +7,13 @@ import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
 
 val defaultDependencyConfiguration = "test->test;compile->compile"
 
+val scala213 = "2.13.8"
+val scala3 = "3.1.0"
+
+val isScala3 = Def.setting(
+  CrossVersion.partialVersion(scalaVersion.value).exists(_._1 == 3)
+)
+
 lazy val root =
   (project in file("."))
     .settings(
@@ -14,7 +21,8 @@ lazy val root =
       publishArtifact := false,
       publish := {},
       publishLocal := {},
-      publish / skip := true
+      publish / skip := true,
+      addCommandAlias("SetScala3", s"++ $scala3!")
     )
     .aggregate(
       core,
@@ -28,7 +36,7 @@ lazy val core =
       name := "excel-reads-core",
       description := "A Excel file parser library core using Scala macro",
       libraryDependencies ++= Seq(
-        "com.chuusai" %% "shapeless" % "2.3.7",
+        "com.chuusai" %% "shapeless" % "2.3.7" cross CrossVersion.for3Use2_13,
         "org.atnos" %% "eff" % "5.22.0",
         "org.scalatest" %% "scalatest" % "3.2.10" % "test"
       )
@@ -42,7 +50,7 @@ lazy val poiScala =
       description := "Excel reads poi scala implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "info.folone" %% "poi-scala" % "0.20"
+        "info.folone" %% "poi-scala" % "0.20" cross CrossVersion.for3Use2_13
       )
     )
     .settings(baseSettings ++ publishSettings)
@@ -70,23 +78,45 @@ val baseSettings = Seq(
   organization := "com.github.y-yu",
   homepage := Some(url("https://github.com/y-yu")),
   licenses := Seq("MIT" -> url(s"https://github.com/y-yu/excel-reads/blob/master/LICENSE")),
-  scalaVersion := "2.13.8",
+  scalaVersion := scala213,
+  crossScalaVersions := Seq(scala213, scala3),
+  scalacOptions ++= {
+    if (isScala3.value) {
+      Seq(
+        "-Ykind-projector",
+        "-source",
+        "3.0-migration"
+      )
+    } else {
+      Seq(
+        "-Xlint:infer-any",
+        "-Xsource:3",
+        "-Ybackend-parallelism",
+        "16"
+      )
+    }
+  },
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding",
     "UTF-8",
-    "-Xlint:infer-any",
-    "-Xsource:3",
     "-feature",
     "-language:implicitConversions",
     "-language:higherKinds",
     "-language:existentials",
-    "-unchecked",
-    "-Ybackend-parallelism",
-    "16"
+    "-unchecked"
   ),
-  scalafmtOnCompile := true,
-  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
+  scalafmtOnCompile := !isScala3.value,
+  libraryDependencies ++= {
+    if (isScala3.value) {
+      // Scala 3 uses `-Ykind-projector` compiler option instead of compiler plugin.
+      Nil
+    } else {
+      Seq(
+        compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
+      )
+    }
+  }
 )
 
 lazy val publishSettings = Seq(
