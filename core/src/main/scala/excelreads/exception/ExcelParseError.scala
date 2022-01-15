@@ -1,7 +1,6 @@
 package excelreads.exception
 
-/**
-  * Base class of a parse error.
+/** Base class of a parse error.
   */
 abstract class ExcelParseError(
   errorIndex: Int,
@@ -13,8 +12,7 @@ abstract class ExcelParseError(
 
 object ExcelParseError {
 
-  /**
-    * Cell type error.
+  /** Cell type error.
     *
     * If you won't give the `message` then make a default one automatically.
     */
@@ -31,8 +29,7 @@ object ExcelParseError {
       cause = cause
     )
 
-  /**
-    * The cell is empty unexpectedly.
+  /** The cell is empty unexpectedly.
     */
   case class UnexpectedEmptyCell(
     errorIndex: Int,

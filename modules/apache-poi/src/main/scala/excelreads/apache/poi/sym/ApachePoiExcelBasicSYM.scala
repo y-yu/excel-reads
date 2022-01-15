@@ -14,10 +14,10 @@ import org.atnos.eff.reader._
 import org.atnos.eff.|=
 import scala.jdk.CollectionConverters._
 
-/**
-  * Apache POI implementation
+/** Apache POI implementation
   *
-  * @tparam R effects stack which contains `Reader[Row, *]`
+  * @tparam R
+  *   effects stack which contains `Reader[Row, *]`
   */
 class ApachePoiExcelBasicSYM[R](implicit
   m: Reader[ApachePoiRow, *] |= R
