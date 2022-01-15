@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         java-version: [ 8, 11 ]
+        set-scala3: [ "", "SetScala3"]
         os: [ macos-latest, ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -24,4 +25,4 @@ jobs:
         uses: coursier/cache-action@v6
 
       - name: Test
-        run: ./sbt test
+        run: ./sbt ${{ matrix.set-scala3 }} test
