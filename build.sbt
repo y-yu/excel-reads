@@ -28,9 +28,9 @@ lazy val core =
       name := "excel-reads-core",
       description := "A Excel file parser library core using Scala macro",
       libraryDependencies ++= Seq(
-        "com.chuusai" %% "shapeless" % "2.3.3",
-        "org.atnos" %% "eff" % "5.13.0",
-        "org.scalatest" %% "scalatest" % "3.2.2" % "test"
+        "com.chuusai" %% "shapeless" % "2.3.7",
+        "org.atnos" %% "eff" % "5.22.0",
+        "org.scalatest" %% "scalatest" % "3.2.10" % "test"
       )
     )
     .settings(baseSettings ++ publishSettings)
@@ -57,8 +57,8 @@ lazy val apachePoi =
       description := "Excel reads Apache POI implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "org.apache.poi" % "poi" % "5.0.0",
-        "org.apache.poi" % "poi-ooxml" % "5.0.0"
+        "org.apache.poi" % "poi" % "5.2.0",
+        "org.apache.poi" % "poi-ooxml" % "5.2.0"
       )
     )
     .settings(baseSettings ++ publishSettings)
@@ -70,7 +70,7 @@ val baseSettings = Seq(
   organization := "com.github.y-yu",
   homepage := Some(url("https://github.com/y-yu")),
   licenses := Seq("MIT" -> url(s"https://github.com/y-yu/excel-reads/blob/master/LICENSE")),
-  scalaVersion := "2.13.4",
+  scalaVersion := "2.13.8",
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding",
@@ -86,7 +86,7 @@ val baseSettings = Seq(
     "16"
   ),
   scalafmtOnCompile := true,
-  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full)
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
 )
 
 lazy val publishSettings = Seq(
@@ -132,7 +132,7 @@ lazy val publishSettings = Seq(
 )
 
 val tagName = Def.setting {
-  s"v${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}"
+  s"v${if (releaseUseGlobalVersion.value) (ThisBuild / version).value else version.value}"
 }
 
 val tagOrHash = Def.setting {
