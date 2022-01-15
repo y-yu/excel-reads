@@ -151,14 +151,13 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
     )
 
-    (sheet1Rows zip expected).foreach {
-      case (row, expected) =>
-        assert(
-          ExcelReads[R, RealExcelDataModel].parse
-            .runReader(row)
-            .evalState(0)
-            .run == Valid(expected)
-        )
+    (sheet1Rows zip expected).foreach { case (row, expected) =>
+      assert(
+        ExcelReads[R, RealExcelDataModel].parse
+          .runReader(row)
+          .evalState(0)
+          .run == Valid(expected)
+      )
     }
   }
 }

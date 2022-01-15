@@ -11,10 +11,10 @@ import org.atnos.eff.Eff
 import org.atnos.eff.|=
 import org.atnos.eff.reader._
 
-/**
-  * Apache POI style sym implementation
+/** Apache POI style sym implementation
   *
-  * @tparam R effects stack which contains `Reader[Row, *]`
+  * @tparam R
+  *   effects stack which contains `Reader[Row, *]`
   */
 class ApachePoiExcelStyleSYM[R](implicit
   m: Reader[ApachePoiRow, *] |= R
