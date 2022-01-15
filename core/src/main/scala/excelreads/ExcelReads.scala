@@ -6,11 +6,12 @@ import excelreads.exception.ExcelParseError
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 
-/**
-  * Excel parser type class
+/** Excel parser type class
   *
-  * @tparam R effects stack for [[Eff]]
-  * @tparam A return type
+  * @tparam R
+  *   effects stack for [[Eff]]
+  * @tparam A
+  *   return type
   */
 abstract class ExcelReads[R, A] {
   def parse(implicit

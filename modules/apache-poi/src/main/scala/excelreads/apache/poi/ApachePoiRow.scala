@@ -10,12 +10,12 @@ import org.apache.poi.ss.usermodel.Row
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 
-/**
-  * Wrapper class for Apache POI `Row`
+/** Wrapper class for Apache POI `Row`
   *
-  * @note This case class will be stacked into the `Eff` effects stack(aka `R`).
-  *       Then Scala compiler will finds implicit instance where the look companion objects of
-  *       all types in effects stack. So this wrapper is needed to wiring implicit instances.
+  * @note
+  *   This case class will be stacked into the `Eff` effects stack(aka `R`). Then Scala compiler will finds implicit
+  *   instance where the look companion objects of all types in effects stack. So this wrapper is needed to wiring
+  *   implicit instances.
   */
 case class ApachePoiRow(
   value: Row
