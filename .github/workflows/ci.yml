@@ -25,4 +25,4 @@ jobs:
         uses: coursier/cache-action@v6
 
       - name: Test
-        run: ./sbt ${{ matrix.set-scala3 }} test
+        run: ./sbt scalafmtSbtCheck ${{ matrix.set-scala3 }} scalafmtCheckAll test
