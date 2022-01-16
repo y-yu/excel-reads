@@ -3,6 +3,9 @@ import ReleaseTransformations._
 import sbt._
 import Keys._
 import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
+import complete.DefaultParsers._
+import xerial.sbt.Sonatype._
+import sbtrelease._
 
 val defaultDependencyConfiguration = "test->test;compile->compile"
 
@@ -15,13 +18,25 @@ val isScala3 = Def.setting(
 
 lazy val root =
   (project in file("."))
+    .settings(publishSettings: _*)
     .settings(
-      name := "excel-reads",
+      name := "excel-reads-root",
+      organization := "com.github.y-yu",
+      releaseCrossBuild := false,
+      crossScalaVersions := Nil,
       publishArtifact := false,
       publish := {},
       publishLocal := {},
       publish / skip := true,
-      addCommandAlias("SetScala3", s"++ $scala3!")
+      publishTo := None,
+      packagedArtifacts := Map.empty,
+      artifacts := Nil,
+      addCommandAlias("SetScala3", s"++ $scala3!"),
+      commands += Command.command("releaseAll") { state =>
+        s"project ${core.id}" :: "release" ::
+        s"project ${apachePoi.id}" :: "release" ::
+        s"project ${poiScala.id}" :: "release" :: state
+      }
     )
     .aggregate(
       core,
@@ -46,7 +61,7 @@ lazy val core =
         "org.scalatest" %% "scalatest" % "3.2.10" % "test"
       )
     )
-    .settings(baseSettings ++ publishSettings)
+    .settings(baseSettings ++ publishSettings: _*)
 
 lazy val poiScala =
   (project in file("modules/poi-scala"))
@@ -58,7 +73,7 @@ lazy val poiScala =
         "info.folone" %% "poi-scala" % "0.20" cross CrossVersion.for3Use2_13
       )
     )
-    .settings(baseSettings ++ publishSettings)
+    .settings(baseSettings ++ publishSettings: _*)
     .dependsOn(
       core % defaultDependencyConfiguration
     )
@@ -74,7 +89,7 @@ lazy val apachePoi =
         "org.apache.poi" % "poi-ooxml" % "5.2.0"
       )
     )
-    .settings(baseSettings ++ publishSettings)
+    .settings(baseSettings ++ publishSettings: _*)
     .dependsOn(
       core % defaultDependencyConfiguration
     )
@@ -126,12 +141,7 @@ val baseSettings = Seq(
 
 lazy val publishSettings = Seq(
   publishMavenStyle := true,
-  publishTo := Some(
-    if (isSnapshot.value)
-      Opts.resolver.sonatypeSnapshots
-    else
-      Opts.resolver.sonatypeStaging
-  ),
+  publishTo := sonatypePublishToBundle.value,
   Test / publishArtifact := false,
   pomExtra :=
     <developers>
@@ -147,22 +157,58 @@ lazy val publishSettings = Seq(
         <tag>{tagOrHash.value}</tag>
       </scm>,
   releaseTagName := tagName.value,
-  releaseCrossBuild := true,
-  releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    commitReleaseVersion,
-    tagRelease,
-    releaseStepCommandAndRemaining("^ publishSigned"),
-    setNextVersion,
-    commitNextVersion,
-    releaseStepCommand("sonatypeReleaseAll"),
-    pushChanges
+  releaseCrossBuild := false,
+  InputKey[Unit](
+    "sleep",
+    "Sleep input duration (sec)."
+  ) := Def.inputTask {
+    val log = streams.value.log
+    val n = name.value
+    val durationSec = (Space ~> IntBasic).parsed
+
+    log.info(s"Sleep $n in $durationSec seconds...")
+
+    Thread.sleep(durationSec * 1000)
+  }.evaluated,
+  releaseProcess := (
+    if (isSnapshot.value)
+      Seq[ReleaseStep](
+        checkSnapshotDependencies,
+        inquireVersions,
+        // runClean,
+        runTest,
+        releaseStepCommandAndRemaining("+publishSigned"),
+        // Wait for sonatype publishing
+        releaseStepCommandAndRemaining("sleep 5"),
+        releaseStepCommand("sonatypeBundleRelease")
+      )
+    else
+      Seq[ReleaseStep](
+        checkSnapshotDependencies,
+        inquireVersions,
+        runClean,
+        runTest,
+        setReleaseVersion,
+        commitReleaseVersion,
+        tagRelease,
+        releaseStepCommandAndRemaining("+publishSigned"),
+        setNextVersion,
+        commitNextVersion,
+        releaseStepCommandAndRemaining("sonatypeBundleRelease"),
+        pushChanges
+      )
   )
 )
+
+/*
+lazy val crossProjectSonatypeRelease = ReleaseStep { state =>
+  val extracted = Project extract state
+  extracted.runAggregated(
+    extracted.get(thisProjectRef) / SonatypeKeys.sonatypeBundleRelease,
+    state
+  )
+}
+ */
 
 val tagName = Def.setting {
   s"v${if (releaseUseGlobalVersion.value) (ThisBuild / version).value else version.value}"
