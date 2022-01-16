@@ -34,8 +34,14 @@ lazy val core =
     .settings(
       name := "excel-reads-core",
       description := "A Excel file parser library core using Scala macro",
+      libraryDependencies ++= {
+        if (scalaBinaryVersion.value == "3") {
+          Nil
+        } else {
+          Seq("com.chuusai" %% "shapeless" % "2.3.7")
+        }
+      },
       libraryDependencies ++= Seq(
-        "com.chuusai" %% "shapeless" % "2.3.7" cross CrossVersion.for3Use2_13,
         "org.atnos" %% "eff" % "5.22.0",
         "org.scalatest" %% "scalatest" % "3.2.10" % "test"
       )
