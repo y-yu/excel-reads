@@ -1,6 +1,5 @@
 import ReleaseTransformations._
 
-import UpdateReadme.updateReadme
 import sbt._
 import Keys._
 import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
@@ -149,12 +148,10 @@ lazy val publishSettings = Seq(
     runClean,
     runTest,
     setReleaseVersion,
-    updateReadme,
     commitReleaseVersion,
     tagRelease,
     releaseStepCommandAndRemaining("^ publishSigned"),
     setNextVersion,
-    updateReadme,
     commitNextVersion,
     releaseStepCommand("sonatypeReleaseAll"),
     pushChanges
