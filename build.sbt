@@ -3,6 +3,7 @@ import ReleaseTransformations._
 import sbt._
 import Keys._
 import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
+import complete.DefaultParsers._
 
 val defaultDependencyConfiguration = "test->test;compile->compile"
 
@@ -16,12 +17,20 @@ val isScala3 = Def.setting(
 lazy val root =
   (project in file("."))
     .settings(
-      name := "excel-reads",
+      releaseCrossBuild := false,
+      crossScalaVersions := Nil,
       publishArtifact := false,
       publish := {},
       publishLocal := {},
       publish / skip := true,
-      addCommandAlias("SetScala3", s"++ $scala3!")
+      publishTo := None,
+      packagedArtifacts := Map.empty,
+      addCommandAlias("SetScala3", s"++ $scala3!"),
+      commands += Command.command("releaseAll") { state =>
+        s"project ${core.id}" :: "release" ::
+        s"project ${apachePoi.id}" :: "release" ::
+        s"project ${poiScala.id}" :: "release" :: state
+      }
     )
     .aggregate(
       core,
@@ -120,12 +129,7 @@ val baseSettings = Seq(
 
 lazy val publishSettings = Seq(
   publishMavenStyle := true,
-  publishTo := Some(
-    if (isSnapshot.value)
-      Opts.resolver.sonatypeSnapshots
-    else
-      Opts.resolver.sonatypeStaging
-  ),
+  publishTo := sonatypePublishToBundle.value,
   Test / publishArtifact := false,
   pomExtra :=
     <developers>
@@ -141,20 +145,45 @@ lazy val publishSettings = Seq(
         <tag>{tagOrHash.value}</tag>
       </scm>,
   releaseTagName := tagName.value,
-  releaseCrossBuild := true,
-  releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    runClean,
-    runTest,
-    setReleaseVersion,
-    commitReleaseVersion,
-    tagRelease,
-    releaseStepCommandAndRemaining("^ publishSigned"),
-    setNextVersion,
-    commitNextVersion,
-    releaseStepCommand("sonatypeReleaseAll"),
-    pushChanges
+  releaseCrossBuild := false,
+  InputKey[Unit](
+    "sleep",
+    "Sleep input duration (sec)."
+  ) := Def.inputTask {
+    val log = streams.value.log
+    val durationSec = (Space ~> IntBasic).parsed
+
+    log.info(s"Sleep in $durationSec seconds...")
+
+    Thread.sleep(durationSec * 1000)
+  }.evaluated,
+  releaseProcess := (
+    if (isSnapshot.value)
+      Seq[ReleaseStep](
+        checkSnapshotDependencies,
+        inquireVersions,
+        runClean,
+        runTest,
+        releaseStepCommandAndRemaining("+publishSigned"),
+        // Wait for sonatype publishing
+        releaseStepCommandAndRemaining("sleep 10"),
+        releaseStepCommand("sonatypeReleaseAll")
+      )
+    else
+      Seq[ReleaseStep](
+        checkSnapshotDependencies,
+        inquireVersions,
+        runClean,
+        runTest,
+        setReleaseVersion,
+        commitReleaseVersion,
+        tagRelease,
+        releaseStepCommandAndRemaining("+publishSigned"),
+        setNextVersion,
+        commitNextVersion,
+        releaseStepCommand("sonatypeReleaseAll"),
+        pushChanges
+      )
   )
 )
 
