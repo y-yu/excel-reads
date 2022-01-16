@@ -20,7 +20,7 @@ trait ExcelReadsGenericInstances { self: ExcelReadsInstances =>
     }
 
   inline def deriveProduct[R, A](using inline a: Mirror.ProductOf[A]): ExcelReads[R, A] = {
-    def p:  ExcelReads[R, A] = {
+    def p: ExcelReads[R, A] = {
       val xs = deriveRec[R, a.MirroredElemTypes]
       productImpl[R, A](xs, a)
     }
@@ -30,19 +30,19 @@ trait ExcelReadsGenericInstances { self: ExcelReadsInstances =>
   final def productImpl[R, A](xs: List[ExcelReads[R, _]], a: Mirror.ProductOf[A]): ExcelReads[R, A] =
     new ExcelReads[R, A] {
       def parse(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, A]] =
-        xs.traverse(_.parse: Eff[R, ?]).map {
-          case values =>
-            values.asInstanceOf[List[ValidatedNel[ExcelParseError, ?]]].sequence.map(vs =>
-              a.fromProduct(new SeqProduct(vs))
-            )
+        xs.traverse(_.parse: Eff[R, ?]).map { case values =>
+          values
+            .asInstanceOf[List[ValidatedNel[ExcelParseError, ?]]]
+            .sequence
+            .map(vs => a.fromProduct(new SeqProduct(vs)))
         }
     }
 
   inline def deriveRec[R, T <: Tuple]: List[ExcelReads[R, _]] =
     inline erasedValue[T] match {
-    case _: EmptyTuple =>
-      Nil
-    case _: (t *: ts) =>
-      derive[R, t] :: deriveRec[R, ts]
-  }
+      case _: EmptyTuple =>
+        Nil
+      case _: (t *: ts) =>
+        derive[R, t] :: deriveRec[R, ts]
+    }
 }
