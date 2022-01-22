@@ -1,9 +1,10 @@
 package excelreads
 
-import cats.implicits._
+import cats.implicits.*
 import cats.data.State
 import cats.data.ValidatedNel
 import excelreads.exception.ExcelParseError
+import excelreads.instance.ExcelReadsInstances
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 import scala.compiletime.*

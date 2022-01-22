@@ -42,4 +42,10 @@ object ExcelParseError {
       ),
       cause = cause
     )
+
+  case class UnknownError(
+    errorIndex: Int,
+    message: String = null,
+    cause: Throwable = null
+  ) extends ExcelParseError(errorIndex, message, cause)
 }

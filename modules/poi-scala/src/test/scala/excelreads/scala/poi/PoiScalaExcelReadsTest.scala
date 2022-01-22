@@ -138,7 +138,6 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
         .run
         .unsafePerformIO() match {
         case -\/(e) =>
-          println(e)
           throw e
         case \/-(v) =>
           v

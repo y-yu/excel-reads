@@ -1,15 +1,17 @@
-package excelreads
+package excelreads.instance
 
 import cats.data.NonEmptyList
 import cats.data.Validated.Invalid
 import cats.data.Validated.Valid
 import cats.data.ValidatedNel
+import excelreads.ExcelReads
+import excelreads.ExcelReadsGenericInstances
 import excelreads.exception.ExcelParseError
 import excelreads.exception.ExcelParseError.UnexpectedEmptyCell
 import excelreads.sym.ExcelBasicSYM
 import excelreads.sym.ExcelStyleSYM
 import org.atnos.eff.Eff
-import org.atnos.eff.state._
+import org.atnos.eff.state.*
 
 /** Basic instances
   *
