@@ -3,13 +3,14 @@ package excelreads
 import cats.data.State
 import cats.data.ValidatedNel
 import excelreads.exception.ExcelParseError
+import excelreads.instance.ExcelReadsInstances
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 
-/** Excel parser type class
+/** Excel cells parser type class
   *
   * @tparam R
-  *   effects stack for [[Eff]]
+  *   effects stack for Eff
   * @tparam A
   *   return type
   */

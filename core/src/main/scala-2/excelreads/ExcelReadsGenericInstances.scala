@@ -5,6 +5,7 @@ import cats.data.Validated
 import cats.data.Validated.Invalid
 import cats.data.Validated.Valid
 import excelreads.exception.ExcelParseError.UnexpectedEmptyCell
+import excelreads.instance.ExcelReadsInstances
 import org.atnos.eff.state.get
 import shapeless.::
 import shapeless.Generic

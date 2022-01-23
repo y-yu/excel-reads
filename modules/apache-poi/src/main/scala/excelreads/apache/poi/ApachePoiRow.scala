@@ -21,7 +21,9 @@ case class ApachePoiRow(
   value: Row
 ) extends AnyVal
 
-object ApachePoiRow {
+object ApachePoiRow extends ApachePoiRowInstances
+
+trait ApachePoiRowInstances {
   implicit def apachePoiBasicSymInstances[R](implicit
     m: Reader[ApachePoiRow, *] |= R
   ): ExcelBasicSYM[Eff[R, *]] =

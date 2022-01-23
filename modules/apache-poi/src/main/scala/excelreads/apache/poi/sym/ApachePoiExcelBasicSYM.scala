@@ -7,12 +7,13 @@ import cats.data.ValidatedNel
 import excelreads.apache.poi.ApachePoiRow
 import excelreads.exception.ExcelParseError
 import excelreads.exception.ExcelParseError.UnexpectedEmptyCell
+import excelreads.exception.ExcelParseError.UnexpectedTypeCell
 import excelreads.sym.ExcelBasicSYM
 import org.apache.poi.ss.usermodel.Cell
 import org.atnos.eff.Eff
-import org.atnos.eff.reader._
+import org.atnos.eff.reader.*
 import org.atnos.eff.|=
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /** Apache POI implementation
   *
@@ -39,15 +40,22 @@ class ApachePoiExcelBasicSYM[R](implicit
       .asScala
       .find(_.getColumnIndex == index) match {
       case Some(a) =>
-        pf
-          .andThen(a => successNel(a))
-          .applyOrElse(
-            a,
-            (_: Cell) =>
-              failureNel(
-                UnexpectedEmptyCell(errorIndex = index)
-              )
-          )
+        try {
+          pf
+            .andThen(a => successNel(a))
+            .applyOrElse(
+              a,
+              (_: Cell) =>
+                failureNel(
+                  UnexpectedEmptyCell(errorIndex = index)
+                )
+            )
+        } catch {
+          case e: IllegalStateException =>
+            failureNel(
+              UnexpectedTypeCell(errorIndex = index, actualCellType = a.getCellType.name(), cause = e)
+            )
+        }
       case None =>
         successNel(None)
     }

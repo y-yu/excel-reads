@@ -13,7 +13,7 @@ import org.atnos.eff.Fx
 import org.scalatest.diagrams.Diagrams
 import org.scalatest.flatspec.AnyFlatSpec
 import java.io.File
-import org.atnos.eff.syntax.all._
+import org.atnos.eff.syntax.all.*
 
 class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
 
