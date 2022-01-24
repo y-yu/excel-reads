@@ -1,14 +1,16 @@
 package excelreads
 
-import cats.implicits.*
+import cats.implicits.catsStdInstancesForList
 import cats.data.State
 import cats.data.ValidatedNel
+import cats.data.Validated.Valid
 import excelreads.exception.ExcelParseError
 import excelreads.instance.ExcelRowReadsInstances
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 import scala.compiletime.*
 import scala.deriving.*
+import excelreads.instance.ValidatedMonadInstance.*
 
 trait ExcelRowReadsGenericInstances { self: ExcelRowReadsInstances =>
 
@@ -28,16 +30,29 @@ trait ExcelRowReadsGenericInstances { self: ExcelRowReadsInstances =>
     p
   }
 
-  final def productImpl[R, A](xs: List[ExcelRowReads[R, _]], a: Mirror.ProductOf[A]): ExcelRowReads[R, A] =
+  final def productImpl[R, A](xs: List[ExcelRowReads[R, _]], a: Mirror.ProductOf[A]): ExcelRowReads[R, A] = {
+    def loop(
+      xs: List[ExcelRowReads[R, _]],
+      acc: List[_]
+    )(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, List[_]]] =
+      xs match {
+        case Nil =>
+          Eff.pure[R, ValidatedNel[ExcelParseError, List[?]]](Valid(acc))
+
+        case x :: t =>
+          for {
+            h <- x.parse
+            result <- Eff.flatTraverseA(h) { a =>
+              loop(t, acc :+ a)
+            }
+          } yield result
+      }
+
     new ExcelRowReads[R, A] {
       def parse(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, A]] =
-        xs.traverse(_.parse: Eff[R, ?]).map { case values =>
-          values
-            .asInstanceOf[List[ValidatedNel[ExcelParseError, ?]]]
-            .sequence
-            .map(vs => a.fromProduct(new SeqProduct(vs)))
-        }
+        loop(xs, Nil).map(_.map(vs => a.fromProduct(new SeqProduct(vs))))
     }
+  }
 
   inline def deriveRec[R, T <: Tuple]: List[ExcelRowReads[R, _]] =
     inline erasedValue[T] match {

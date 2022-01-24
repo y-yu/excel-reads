@@ -1,12 +1,17 @@
-package excelreads
+package excelreads.util
 
 import cats.data.State
+import cats.data.Validated.Invalid
+import cats.data.Validated.Valid
 import cats.data.ValidatedNel
+import excelreads.ExcelRowQuantifier.*
+import excelreads.ExcelSheetReads
 import excelreads.exception.ExcelParseError
+import excelreads.instance.ValidatedMonadInstance.*
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 
-trait ExcelSheetReadsUtils {
+trait ExcelSheetReadsParse {
   def parse[R, A](implicit
     m: State[Int, *] |= R,
     r1: ExcelSheetReads[R, A]

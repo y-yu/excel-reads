@@ -17,4 +17,12 @@ object ExcelRowQuantifier {
   /** Skip some empty rows
     */
   case class SkipOnlyEmpties()
+
+  /** Match at end of sheet
+    *
+    * @note
+    *   This match the position, not data. So it doesn't advance to the next row. If you want to go next row, you have
+    *   to use `Skip` manually.
+    */
+  case class End()
 }

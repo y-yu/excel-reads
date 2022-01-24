@@ -17,6 +17,7 @@ import org.atnos.eff.|=
 import scala.util.control.NonFatal
 import org.atnos.eff.syntax.all.*
 import cats.implicits.*
+import excelreads.instance.ValidatedMonadInstance.*
 import org.atnos.eff.Fx
 import excelreads.apache.poi.sym.ApachePoiExcelRowSYM.ApachePoiExcelReadsStack
 
@@ -28,6 +29,18 @@ class ApachePoiExcelRowSYM[R](implicit
       sheet <- ask
     } yield try {
       Valid(Option(sheet.value.getRow(index)).isEmpty)
+    } catch {
+      case NonFatal(e) =>
+        Invalid(
+          NonEmptyList(ExcelParseError.UnknownError(index, e.getMessage, e), Nil)
+        )
+    }
+
+  override def isEnd(index: Int): Eff[R, ValidatedNel[ExcelParseError, Boolean]] =
+    for {
+      sheet <- ask
+    } yield try {
+      Valid(sheet.value.getLastRowNum < index)
     } catch {
       case NonFatal(e) =>
         Invalid(
@@ -56,13 +69,12 @@ class ApachePoiExcelRowSYM[R](implicit
   ): Eff[R, ValidatedNel[ExcelParseError, A]] =
     for {
       validationRow <- getRow(index)
-    } yield validationRow.toEither.flatMap { row =>
+    } yield validatedMonadInstance.flatMap(validationRow) { row =>
       reads.parse
         .runReader(row)
         .evalState(0)
         .run
-        .toEither
-    }.toValidated
+    }
 
 }
 
