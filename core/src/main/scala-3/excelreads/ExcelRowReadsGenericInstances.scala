@@ -4,32 +4,32 @@ import cats.implicits.*
 import cats.data.State
 import cats.data.ValidatedNel
 import excelreads.exception.ExcelParseError
-import excelreads.instance.ExcelReadsInstances
+import excelreads.instance.ExcelRowReadsInstances
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 import scala.compiletime.*
 import scala.deriving.*
 
-trait ExcelReadsGenericInstances { self: ExcelReadsInstances =>
+trait ExcelRowReadsGenericInstances { self: ExcelRowReadsInstances =>
 
-  inline implicit def derive[R, A]: ExcelReads[R, A] =
+  inline implicit def derive[R, A]: ExcelRowReads[R, A] =
     summonFrom {
-      case x: ExcelReads[R, A] =>
+      case x: ExcelRowReads[R, A] =>
         x
       case _: Mirror.ProductOf[A] =>
         deriveProduct[R, A]
     }
 
-  inline def deriveProduct[R, A](using inline a: Mirror.ProductOf[A]): ExcelReads[R, A] = {
-    def p: ExcelReads[R, A] = {
+  inline def deriveProduct[R, A](using inline a: Mirror.ProductOf[A]): ExcelRowReads[R, A] = {
+    def p: ExcelRowReads[R, A] = {
       val xs = deriveRec[R, a.MirroredElemTypes]
       productImpl[R, A](xs, a)
     }
     p
   }
 
-  final def productImpl[R, A](xs: List[ExcelReads[R, _]], a: Mirror.ProductOf[A]): ExcelReads[R, A] =
-    new ExcelReads[R, A] {
+  final def productImpl[R, A](xs: List[ExcelRowReads[R, _]], a: Mirror.ProductOf[A]): ExcelRowReads[R, A] =
+    new ExcelRowReads[R, A] {
       def parse(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, A]] =
         xs.traverse(_.parse: Eff[R, ?]).map { case values =>
           values
@@ -39,7 +39,7 @@ trait ExcelReadsGenericInstances { self: ExcelReadsInstances =>
         }
     }
 
-  inline def deriveRec[R, T <: Tuple]: List[ExcelReads[R, _]] =
+  inline def deriveRec[R, T <: Tuple]: List[ExcelRowReads[R, _]] =
     inline erasedValue[T] match {
       case _: EmptyTuple =>
         Nil

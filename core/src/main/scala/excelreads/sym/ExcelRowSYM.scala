@@ -3,7 +3,7 @@ package excelreads.sym
 import cats.Monad
 import cats.data.State
 import cats.data.ValidatedNel
-import excelreads.ExcelReads
+import excelreads.ExcelRowReads
 import excelreads.exception.ExcelParseError
 import org.atnos.eff.|=
 
@@ -25,6 +25,6 @@ abstract class ExcelRowSYM[Row, R, F[_]: Monad](implicit
 
   def withRow[A](
     index: Int,
-    f: ExcelReads[R, A]
+    f: ExcelRowReads[R, A]
   ): F[ValidatedNel[ExcelParseError, A]]
 }

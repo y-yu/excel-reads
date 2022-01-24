@@ -6,7 +6,7 @@ import cats.data.State
 import cats.data.Validated.Invalid
 import cats.data.Validated.Valid
 import cats.data.ValidatedNel
-import excelreads.ExcelReads
+import excelreads.ExcelRowReads
 import excelreads.apache.poi.ApachePoiRow
 import excelreads.apache.poi.ApachePoiSheet
 import excelreads.exception.ExcelParseError
@@ -52,7 +52,7 @@ class ApachePoiExcelRowSYM[R](implicit
 
   override def withRow[A](
     index: Int,
-    reads: ExcelReads[ApachePoiExcelReadsStack, A]
+    reads: ExcelRowReads[ApachePoiExcelReadsStack, A]
   ): Eff[R, ValidatedNel[ExcelParseError, A]] =
     for {
       validationRow <- getRow(index)

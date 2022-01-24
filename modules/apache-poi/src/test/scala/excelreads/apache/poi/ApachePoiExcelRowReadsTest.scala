@@ -3,8 +3,8 @@ package excelreads.apache.poi
 import cats.data.Reader
 import cats.data.State
 import cats.data.Validated.Valid
-import excelreads.row.ExcelRowQuantifier.*
-import excelreads.ExcelRowReads
+import excelreads.ExcelRowQuantifier.*
+import excelreads.ExcelSheetReads
 import excelreads.util.TestUtils
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.IndexedColors
@@ -33,7 +33,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
   }
 
   "reads" should "return rows, for each has a `Int` and `String` cell" in new SetUp {
-    val actual = ExcelRowReads
+    val actual = ExcelSheetReads
       .parse[R, Int, String]
       .runReader(ApachePoiSheet(sheet))
       .evalState(0)
@@ -49,7 +49,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
       cell.setCellValue(i.toDouble)
     }
 
-    val actual = ExcelRowReads
+    val actual = ExcelSheetReads
       .parse[R, Many[Int]]
       .runReader(ApachePoiSheet(sheet))
       .evalState(0)
@@ -59,7 +59,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
   }
 
   it should "return `Seq[Int]` and `String` by `[Many[Int], String]`" in new SetUp {
-    val actual = ExcelRowReads
+    val actual = ExcelSheetReads
       .parse[R, Many[Int], String]
       .runReader(ApachePoiSheet(sheet))
       .evalState(0)
@@ -69,7 +69,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
   }
 
   it should "return `Seq[Int]` and `Seq[String]` by `[Many[Int], Many[String]]`" in new SetUp {
-    val actual = ExcelRowReads
+    val actual = ExcelSheetReads
       .parse[R, Many[Int], Many[String]]
       .runReader(ApachePoiSheet(sheet))
       .evalState(0)
@@ -79,7 +79,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
   }
 
   it should "return `Int` and `Some[String]` by `[Int, Optional[String]]`" in new SetUp {
-    val actual = ExcelRowReads
+    val actual = ExcelSheetReads
       .parse[R, Int, Optional[String]]
       .runReader(ApachePoiSheet(sheet))
       .evalState(0)
@@ -89,7 +89,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
   }
 
   it should "return `None`, `Int` and `Some[String]` by `[Optional[Boolean], Int, Optional[String]]`" in new SetUp {
-    val actual = ExcelRowReads
+    val actual = ExcelSheetReads
       .parse[R, Optional[Boolean], Int, Optional[String]]
       .runReader(ApachePoiSheet(sheet))
       .evalState(0)
@@ -99,7 +99,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
   }
 
   it should "return `Unit`, String` by `[Skip, String]`" in new SetUp {
-    val actual = ExcelRowReads
+    val actual = ExcelSheetReads
       .parse[R, Skip, String]
       .runReader(ApachePoiSheet(sheet))
       .evalState(0)
@@ -113,7 +113,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
     val cell = row.createCell(0)
     cell.setCellValue(true)
 
-    val actual = ExcelRowReads
+    val actual = ExcelSheetReads
       .parse[R, Int, Skip, SkipOnlyEmpties, Boolean]
       .runReader(ApachePoiSheet(sheet))
       .evalState(0)

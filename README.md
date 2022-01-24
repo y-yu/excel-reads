@@ -27,7 +27,7 @@ val workbook = WorkbookFactory.create(
 )
 val sheet = ApachePoiSheet(workbook.getSheet("Sheet1"))
 
-val actual = ExcelRowReads
+val actual = ExcelSheetReads
   .parse[R, HelloWorld]
   .runReader(sheet)
   .evalState(0)

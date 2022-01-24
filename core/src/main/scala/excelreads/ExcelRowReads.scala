@@ -1,37 +1,35 @@
 package excelreads
 
-import cats.implicits.*
 import cats.data.State
 import cats.data.ValidatedNel
 import excelreads.exception.ExcelParseError
 import excelreads.instance.ExcelRowReadsInstances
-import excelreads.row.ExcelRowReadsUtils
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 
-/** Excel rows parser type class
+/** Excel row parser type class
   *
   * @tparam R
-  *   Effect stack
+  *   effects stack for Eff
   * @tparam A
-  *   Result type
+  *   return type
   */
 abstract class ExcelRowReads[R, A] {
-  type Result
-
   def parse(implicit
     m: State[Int, *] |= R
-  ): Eff[R, ValidatedNel[ExcelParseError, Result]]
+  ): Eff[R, ValidatedNel[ExcelParseError, A]]
 }
 
-object ExcelRowReads extends ExcelRowReadsUtils with ExcelRowReadsInstances {
+object ExcelRowReads extends ExcelRowReadsInstances {
 
-  def from[R, A, B](
-    f: State[Int, *] |= R => Eff[R, ValidatedNel[ExcelParseError, B]]
+  def apply[R, A](implicit
+    reads: ExcelRowReads[R, A]
+  ): ExcelRowReads[R, A] = reads
+
+  def from[R, A](
+    f: State[Int, *] |= R => Eff[R, ValidatedNel[ExcelParseError, A]]
   ): ExcelRowReads[R, A] = new ExcelRowReads[R, A] {
-    type Result = B
-
-    def parse(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, B]] =
+    def parse(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, A]] =
       f(m)
   }
 }

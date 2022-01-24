@@ -3,7 +3,7 @@ package excelreads.scala.poi
 import cats.data.Reader
 import cats.data.State
 import cats.data.Validated.Valid
-import excelreads.ExcelReads
+import excelreads.ExcelRowReads
 import excelreads.util.TestUtils
 import org.atnos.eff.syntax.all._
 import info.folone.scala.poi.BooleanCell
@@ -29,7 +29,7 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
     })
 
     assert(
-      ExcelReads[R, String].parse
+      ExcelRowReads[R, String].parse
         .runReader(row)
         .evalState(0)
         .run == Valid("hello")
@@ -49,7 +49,7 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       )
     })
 
-    val actual = ExcelReads[R, HelloExcel].parse
+    val actual = ExcelRowReads[R, HelloExcel].parse
       .runReader(row)
       .evalState(0)
       .run
@@ -69,7 +69,7 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       )
     })
 
-    val actual = ExcelReads[R, Numbers].parse
+    val actual = ExcelRowReads[R, Numbers].parse
       .runReader(row)
       .evalState(0)
       .run
@@ -87,7 +87,7 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       )
     })
     assert(
-      ExcelReads[R, HasOption].parse
+      ExcelRowReads[R, HasOption].parse
         .runReader(row1)
         .evalState(0)
         .run == Valid(HasOption(Some(true)))
@@ -95,7 +95,7 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
 
     val row2 = PoiScalaRow(Row(1) { Set.empty })
     assert(
-      ExcelReads[R, HasOption].parse
+      ExcelRowReads[R, HasOption].parse
         .runReader(row2)
         .evalState(0)
         .run == Valid(HasOption(None))
@@ -152,7 +152,7 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
 
     (sheet1Rows zip expected).foreach { case (row, expected) =>
       assert(
-        ExcelReads[R, RealExcelDataModel].parse
+        ExcelRowReads[R, RealExcelDataModel].parse
           .runReader(row)
           .evalState(0)
           .run == Valid(expected)
