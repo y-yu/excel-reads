@@ -146,4 +146,37 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
     )
     assert(actual == expected)
   }
+
+  case class Header(
+    a1: String,
+    a2: String,
+    a3: Int,
+    a4: Boolean
+  )
+
+  trait RealExcelSetUp2 {
+    val workbook = WorkbookFactory.create(
+      new File(getClass.getResource("/test2.xlsx").getFile)
+    )
+    val sheet = workbook.getSheet("Sheet1")
+  }
+
+  it should "parse successfully" in new RealExcelSetUp2 {
+    val actual = ExcelSheetReads
+      .parse[R, Header, List[Int], Optional[Boolean], SkipOnlyEmpties, (String, String)]
+      .runReader(ApachePoiSheet(sheet))
+      .evalState(0)
+      .run
+
+    val expected = Valid(
+      (
+        Header("Hello", "Excel", 1, true),
+        List(1, 2, 3, 4, 5),
+        Some(true),
+        1,
+        ("Good", "Bye!")
+      )
+    )
+    assert(actual == expected)
+  }
 }
