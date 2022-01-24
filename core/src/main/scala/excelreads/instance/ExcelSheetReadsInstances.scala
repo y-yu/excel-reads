@@ -14,18 +14,29 @@ import org.atnos.eff.Eff
 import org.atnos.eff.state.*
 import org.atnos.eff.syntax.all.*
 import org.atnos.eff.|=
+import excelreads.instance.ValidatedMonadInstance.*
 
 trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
-  implicit def skipInstance[Row, R, A](implicit
+  implicit def endInstance[Row, R, A](implicit
     sym: ExcelRowSYM[Row, _, Eff[R, *]]
-  ): ExcelSheetReads[R, Skip] = {
+  ): ExcelSheetReads[R, End] =
+    ExcelSheetReads.from[R, End, Boolean] { implicit m =>
+      for {
+        s <- get
+        isEmpty <- sym.isEmpty(s)
+        isEnd <- sym.isEnd(s)
+      } yield (isEmpty product isEnd) map { case (x, y) =>
+        x && y
+      }
+    }
+
+  implicit def skipInstance[Row, R, A]: ExcelSheetReads[R, Skip] =
     ExcelSheetReads.from[R, Skip, Unit] { implicit m =>
       for {
         s <- get
         _ <- put(s + 1)
       } yield Valid(())
     }
-  }
 
   implicit def skipOnlyEmptiesInstance[Row, R, A](implicit
     sym: ExcelRowSYM[Row, _, Eff[R, *]]
@@ -38,12 +49,17 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
       for {
         s <- get
         isEmpty <- sym.isEmpty(s)
-        result <- Eff.traverseA(isEmpty) {
+        isEnd <- sym.isEnd(s)
+        result <- Eff.flatTraverseA(
+          (isEmpty product isEnd) map { case (x, y) =>
+            x && !y // empty, NOT end
+          }
+        ) {
           case true => put(s + 1) >> loop(skipLineCount + 1)
           case false =>
             Eff.pure[R, ValidatedNel[ExcelParseError, Int]](Valid(skipLineCount))
         }
-      } yield result.map(_.toEither).toEither.flatten.toValidated
+      } yield result
 
     ExcelSheetReads.from[R, SkipOnlyEmpties, Int] { implicit m =>
       loop(0)
@@ -65,7 +81,7 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
       for {
         s <- get
         isEmpty <- sym.isEmpty(s)
-        result <- Eff.traverseA(isEmpty) {
+        result <- Eff.flatTraverseA(isEmpty) {
           case true =>
             asResult
           case false =>
@@ -79,7 +95,7 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
               }
             } yield result
         }
-      } yield result.map(x => x.toEither).toEither.flatten.toValidated // HELP!
+      } yield result
     }
 
     ExcelSheetReads.from[R, Many[A], Seq[A]] { implicit m =>
@@ -97,7 +113,7 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
       for {
         s <- get
         isEmpty <- sym.isEmpty(s)
-        result <- Eff.traverseA(isEmpty) {
+        result <- Eff.flatTraverseA(isEmpty) {
           case true =>
             emptyResult
           case false =>
@@ -111,7 +127,7 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
               }
             } yield result
         }
-      } yield result.map(x => x.toEither).toEither.flatten.toValidated
+      } yield result
     }
   }
 }
@@ -125,7 +141,10 @@ trait ExcelSheetReadsLowPriorityInstances {
       for {
         s <- get
         validationA <- sym.withRow(s, reads)
-        _ <- put(s + 1)
+
+        _ <- Eff.traverseA(validationA) { _ =>
+          put(s + 1)
+        }
       } yield validationA
     }
 }

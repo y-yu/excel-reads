@@ -8,6 +8,8 @@ import shapeless.Generic
 import shapeless.HList
 import shapeless.HNil
 import shapeless.Lazy
+import excelreads.instance.ValidatedMonadInstance.*
+import org.atnos.eff.Eff
 
 trait ExcelRowReadsGenericInstances { self: ExcelRowReadsInstances =>
   implicit def hNilInstance[R]: ExcelRowReads[R, HNil] =
@@ -22,8 +24,10 @@ trait ExcelRowReadsGenericInstances { self: ExcelRowReadsInstances =>
     ExcelRowReads.from { implicit m =>
       for {
         hv <- head.parse
-        tv <- tail.parse
-      } yield hv.ap(tv.map(t => h => h :: t))
+        result <- Eff.flatTraverseA(hv) { h =>
+          tail.parse.map { _.map(t => h :: t) }
+        }
+      } yield result
     }
 
   implicit def hListInstance[R, A, L <: HList](implicit

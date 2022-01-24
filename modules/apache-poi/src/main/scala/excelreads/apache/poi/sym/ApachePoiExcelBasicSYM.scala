@@ -3,6 +3,7 @@ package excelreads.apache.poi.sym
 import cats.data.NonEmptyList
 import cats.data.Reader
 import cats.data.Validated
+import cats.data.Validated.Invalid
 import cats.data.ValidatedNel
 import excelreads.apache.poi.ApachePoiRow
 import excelreads.exception.ExcelParseError
@@ -14,6 +15,7 @@ import org.atnos.eff.Eff
 import org.atnos.eff.reader.*
 import org.atnos.eff.|=
 import scala.jdk.CollectionConverters.*
+import scala.util.control.NonFatal
 
 /** Apache POI implementation
   *
@@ -35,29 +37,39 @@ class ApachePoiExcelBasicSYM[R](implicit
   ): Eff[R, ValidatedNel[ExcelParseError, Option[A]]] =
     for {
       row <- ask
-    } yield row.value
-      .cellIterator()
-      .asScala
-      .find(_.getColumnIndex == index) match {
-      case Some(a) =>
-        try {
-          pf
-            .andThen(a => successNel(a))
-            .applyOrElse(
-              a,
-              (_: Cell) =>
-                failureNel(
-                  UnexpectedEmptyCell(errorIndex = index)
-                )
-            )
-        } catch {
-          case e: IllegalStateException =>
-            failureNel(
-              UnexpectedTypeCell(errorIndex = index, actualCellType = a.getCellType.name(), cause = e)
-            )
-        }
-      case None =>
-        successNel(None)
+    } yield {
+      try {
+        if (row.value.getLastCellNum > 0)
+          row.value
+            .cellIterator()
+            .asScala
+            .find(_.getColumnIndex == index) match {
+            case Some(a) =>
+              try {
+                pf
+                  .andThen(a => successNel(a))
+                  .applyOrElse(
+                    a,
+                    (_: Cell) =>
+                      failureNel(
+                        UnexpectedEmptyCell(errorIndex = index)
+                      )
+                  )
+              } catch {
+                case e: IllegalStateException =>
+                  failureNel(
+                    UnexpectedTypeCell(errorIndex = index, actualCellType = a.getCellType.name(), cause = e)
+                  )
+              }
+            case None =>
+              successNel(None)
+          }
+        else
+          failureNel(ExcelParseError.UnexpectedEmptyCell(index))
+      } catch {
+        case NonFatal(e) =>
+          failureNel(ExcelParseError.UnknownError(index, e.getMessage, e))
+      }
     }
 
   override def getString(index: Int): Eff[R, ValidatedNel[ExcelParseError, Option[String]]] =

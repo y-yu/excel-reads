@@ -101,4 +101,30 @@ class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       )
     }
   }
+
+  it should "fail if the type is not match for the rows" in new RealExcelSetUp {
+    case class Dummy(
+      a1: Boolean,
+      a2: Boolean,
+      a3: Boolean
+    )
+
+    val actual = ExcelRowReads[R, Dummy].parse
+      .runReader(rows.head)
+      .evalState(0)
+      .run
+
+    assert(actual.isInvalid)
+  }
+
+  it should "fail if the start is void row" in new RealExcelSetUp {
+    val voidRow = ApachePoiRow(sheet.getRow(2))
+
+    val actual = ExcelRowReads[R, RealExcelDataModel].parse
+      .runReader(voidRow)
+      .evalState(0)
+      .run
+
+    assert(actual.isInvalid)
+  }
 }

@@ -34,7 +34,7 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
     cell2.setCellValue("dummy")
   }
 
-  "reads" should "return rows, for each has a `Int` and `String` cell" in new SetUp {
+  "parse" should "return rows, for each has a `Int` and `String` cell" in new SetUp {
     val actual = ExcelSheetReads
       .parse[R, Int, String]
       .runReader(ApachePoiSheet(sheet))
@@ -147,6 +147,25 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
     assert(actual == expected)
   }
 
+  it should "stop if `SkipOnlyEmpties` is put on the end" in new RealExcelSetUp {
+    val actual = ExcelSheetReads
+      .parse[R, Many[RealExcelDataModel], SkipOnlyEmpties]
+      .runReader(ApachePoiSheet(sheet))
+      .evalState(0)
+      .run
+
+    val expected = Valid(
+      (
+        Seq(
+          RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
+          RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
+        ),
+        0 // Not define any rows after data
+      )
+    )
+    assert(actual == expected)
+  }
+
   case class Header(
     a1: String,
     a2: String,
@@ -175,6 +194,40 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
         Some(true),
         1,
         ("Good", "Bye!")
+      )
+    )
+    assert(actual == expected)
+  }
+
+  "loop" should "parse data repeatedly" in new RealExcelSetUp {
+    val actual = ExcelSheetReads
+      .loop[R, RealExcelDataModel]
+      .runReader(ApachePoiSheet(sheet))
+      .evalState(0)
+      .run
+
+    val expected = Valid(
+      List(
+        RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
+        RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
+      )
+    )
+    assert(actual == expected)
+  }
+
+  it should "parse some data repeatedly" in new RealExcelSetUp {
+    val actual = ExcelSheetReads
+      .loop[R, RealExcelDataModel, RealExcelDataModel]
+      .runReader(ApachePoiSheet(sheet))
+      .evalState(0)
+      .run
+
+    val expected = Valid(
+      List(
+        (
+          RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
+          RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
+        )
       )
     )
     assert(actual == expected)

@@ -43,6 +43,20 @@ object ExcelParseError {
       cause = cause
     )
 
+  /** The row is empty unexpectedly.
+    */
+  case class UnexpectedEmptyRow(
+    errorIndex: Int,
+    message: Option[String] = None,
+    cause: Throwable = null
+  ) extends ExcelParseError(
+      errorIndex = errorIndex,
+      message = message.getOrElse(
+        s"The row($errorIndex) is empty."
+      ),
+      cause = cause
+    )
+
   case class UnknownError(
     errorIndex: Int,
     message: String = null,

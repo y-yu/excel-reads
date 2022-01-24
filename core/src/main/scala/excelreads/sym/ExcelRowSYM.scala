@@ -19,6 +19,10 @@ abstract class ExcelRowSYM[Row, R, F[_]: Monad](implicit
     index: Int
   ): F[ValidatedNel[ExcelParseError, Boolean]]
 
+  def isEnd(
+    index: Int
+  ): F[ValidatedNel[ExcelParseError, Boolean]]
+
   def getRow(
     index: Int
   ): F[ValidatedNel[ExcelParseError, Row]]

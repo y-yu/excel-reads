@@ -31,9 +31,11 @@ trait ExcelRowReadsInstances extends ExcelRowReadsGenericInstances with ExcelRea
     ExcelRowReads.from { implicit m =>
       for {
         s <- get
-        aOpt <- f(sym)(s)
-        _ <- put(s + 1)
-      } yield aOpt
+        aValidation <- f(sym)(s)
+        _ <- Eff.traverseA(aValidation) { _ =>
+          put(s + 1)
+        }
+      } yield aValidation
     }
 
   implicit def stringInstance[R](implicit
