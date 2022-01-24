@@ -36,7 +36,7 @@ val actual = ExcelSheetReads
 assert(actual == Valid(HelloWorld("hello", "world")))
 ```
 
-See also [tests](,https://github.com/y-yu/excel-reads/tree/master/modules/apache-poi/src/test/scala/excelreads/apache/poi).
+See also [tests](https://github.com/y-yu/excel-reads/tree/master/modules/apache-poi/src/test/scala/excelreads/apache/poi).
 
 ## References
 
