@@ -77,13 +77,6 @@ class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
   }
 
   trait RealExcelSetUp {
-    case class RealExcelDataModel(
-      a1: String,
-      a2: Option[String],
-      a3: Double,
-      a4: List[String]
-    )
-
     val workbook = WorkbookFactory.create(
       new File(getClass.getResource("/test.xlsx").getFile)
     )

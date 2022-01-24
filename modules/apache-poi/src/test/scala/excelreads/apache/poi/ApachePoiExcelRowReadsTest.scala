@@ -8,11 +8,13 @@ import excelreads.ExcelSheetReads
 import excelreads.util.TestUtils
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.atnos.eff.Fx
 import org.scalatest.diagrams.Diagrams
 import org.scalatest.flatspec.AnyFlatSpec
 import org.atnos.eff.syntax.all.*
+import java.io.File
 
 class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
 
@@ -120,5 +122,28 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
       .run
 
     assert(actual == Valid((2, (), 8, true)))
+  }
+
+  trait RealExcelSetUp {
+    val workbook = WorkbookFactory.create(
+      new File(getClass.getResource("/test.xlsx").getFile)
+    )
+    val sheet = workbook.getSheet("Sheet1")
+  }
+
+  it should "return case classes successfully from loading a real Excel file" in new RealExcelSetUp {
+    val actual = ExcelSheetReads
+      .parse[R, Many[RealExcelDataModel]]
+      .runReader(ApachePoiSheet(sheet))
+      .evalState(0)
+      .run
+
+    val expected = Valid(
+      List(
+        RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
+        RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
+      )
+    )
+    assert(actual == expected)
   }
 }
