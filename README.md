@@ -11,7 +11,7 @@ This is the Excel row(s) parser library using Scala macro.
 I recommend to use Apache POI version.
 
 ```scala
-libraryDependencies += "com.github.y-yu" %% "excel-reads-apache-poi" % "0.5.0"
+libraryDependencies += "com.github.y-yu" %% "excel-reads-apache-poi" % "0.5.1"
 ```
 
 ```scala
