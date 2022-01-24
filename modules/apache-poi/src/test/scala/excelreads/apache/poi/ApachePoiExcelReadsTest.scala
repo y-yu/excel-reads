@@ -3,7 +3,7 @@ package excelreads.apache.poi
 import cats.data.Reader
 import cats.data.State
 import cats.data.Validated.Valid
-import excelreads.ExcelReads
+import excelreads.ExcelRowReads
 import excelreads.util.TestUtils
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.IndexedColors
@@ -33,7 +33,7 @@ class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
 
   "reads" should "return `Int` from the `Option[Int]` instance" in new SetUp {
     assert(
-      ExcelReads[R, Int].parse
+      ExcelRowReads[R, Int].parse
         .runReader(row)
         .evalState(0)
         .run == Valid(1)
@@ -45,7 +45,7 @@ class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       value: Int
     )
     assert(
-      ExcelReads[R, OneInt].parse
+      ExcelRowReads[R, OneInt].parse
         .runReader(row)
         .evalState(0)
         .run == Valid(OneInt(1))
@@ -58,7 +58,7 @@ class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       value: Int
     )
     assert(
-      ExcelReads[R, IntAndStyle].parse
+      ExcelRowReads[R, IntAndStyle].parse
         .runReader(row)
         .evalState(0)
         .run == Valid(IntAndStyle(style, 1))
@@ -69,7 +69,7 @@ class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
     val row2 = ApachePoiRow(sheet.createRow(1))
 
     assert(
-      ExcelReads[R, Option[CellStyle]].parse
+      ExcelRowReads[R, Option[CellStyle]].parse
         .runReader(row2)
         .evalState(0)
         .run == Valid(None)
@@ -101,7 +101,7 @@ class ApachePoiExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
     )
     (rows zip expected).foreach { case (row, expected) =>
       assert(
-        ExcelReads[R, RealExcelDataModel].parse
+        ExcelRowReads[R, RealExcelDataModel].parse
           .runReader(row)
           .evalState(0)
           .run == Valid(expected)

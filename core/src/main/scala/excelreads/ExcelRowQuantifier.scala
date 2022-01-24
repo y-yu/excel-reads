@@ -1,4 +1,4 @@
-package excelreads.row
+package excelreads
 
 object ExcelRowQuantifier {
 
@@ -6,7 +6,7 @@ object ExcelRowQuantifier {
     */
   case class Optional[A]()
 
-  /** Parse some `A`
+  /** Parse `A` over some rows
     */
   case class Many[A]()
 

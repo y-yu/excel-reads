@@ -1,131 +1,117 @@
 package excelreads.instance
 
-import cats.implicits.*
-import cats.data.State
+import cats.data.NonEmptyList
 import cats.data.Validated.Invalid
 import cats.data.Validated.Valid
 import cats.data.ValidatedNel
-import excelreads.ExcelReads
-import excelreads.row.ExcelRowQuantifier.*
 import excelreads.ExcelRowReads
+import excelreads.ExcelRowReadsGenericInstances
 import excelreads.exception.ExcelParseError
-import excelreads.sym.ExcelRowSYM
+import excelreads.exception.ExcelParseError.UnexpectedEmptyCell
+import excelreads.sym.ExcelBasicSYM
+import excelreads.sym.ExcelStyleSYM
 import org.atnos.eff.Eff
 import org.atnos.eff.state.*
-import org.atnos.eff.syntax.all.*
-import org.atnos.eff.|=
 
-trait ExcelRowReadsInstances extends ExcelRowReadsLowPriorityInstances {
-  implicit def skipInstance[Row, R, A](implicit
-    sym: ExcelRowSYM[Row, _, Eff[R, *]]
-  ): ExcelRowReads[R, Skip] = {
-    ExcelRowReads.from[R, Skip, Unit] { implicit m =>
+/** Basic instances
+  *
+  * @note
+  *   This parser uses `HList` to parse the `case class` which do not contain data types like neither `Either` nor ADT.
+  *   `Either` and ADT are required `Coproduct` but the parser sometimes cannot determine which type it should parse.
+  *   That's the why I don't make `Coproduct` instances. If you use ADT in the type representing a Excel row, you have
+  *   to implement a instance to parse it.
+  */
+trait ExcelRowReadsInstances extends ExcelRowReadsGenericInstances with ExcelReadsLowPriorityInstance {
+  // Primitive instances
+  private def basicInstance[R, A](
+    f: ExcelBasicSYM[Eff[R, *]] => Int => Eff[R, ValidatedNel[ExcelParseError, A]]
+  )(implicit
+    sym: ExcelBasicSYM[Eff[R, *]]
+  ): ExcelRowReads[R, A] =
+    ExcelRowReads.from { implicit m =>
       for {
         s <- get
+        aOpt <- f(sym)(s)
         _ <- put(s + 1)
-      } yield Valid(())
+      } yield aOpt
     }
-  }
 
-  implicit def skipOnlyEmptiesInstance[Row, R, A](implicit
-    sym: ExcelRowSYM[Row, _, Eff[R, *]]
-  ): ExcelRowReads[R, SkipOnlyEmpties] = {
-    def loop(
-      skipLineCount: Int
-    )(implicit
-      m: State[Int, *] |= R
-    ): Eff[R, ValidatedNel[ExcelParseError, Int]] =
+  implicit def stringInstance[R](implicit
+    sym: ExcelBasicSYM[Eff[R, *]]
+  ): ExcelRowReads[R, Option[String]] =
+    basicInstance { sym => sym.getString }
+
+  implicit def doubleInstance[R](implicit
+    sym: ExcelBasicSYM[Eff[R, *]]
+  ): ExcelRowReads[R, Option[Double]] =
+    basicInstance { sym => sym.getDouble }
+
+  implicit def intInstance[R](implicit
+    sym: ExcelBasicSYM[Eff[R, *]]
+  ): ExcelRowReads[R, Option[Int]] =
+    basicInstance { sym => sym.getInt }
+
+  implicit def booleanInstance[R](implicit
+    sym: ExcelBasicSYM[Eff[R, *]]
+  ): ExcelRowReads[R, Option[Boolean]] =
+    basicInstance { sym => sym.getBoolean }
+
+  // This instance won't increment state
+  // even if getting a style data from the cell.
+  implicit def styleInstance[R, Style](implicit
+    sym: ExcelStyleSYM[Style, Eff[R, *]]
+  ): ExcelRowReads[R, Option[Style]] =
+    ExcelRowReads.from { implicit m =>
       for {
         s <- get
-        isEmpty <- sym.isEmpty(s)
-        result <- Eff.traverseA(isEmpty) {
-          case true => put(s + 1) >> loop(skipLineCount + 1)
-          case false =>
-            Eff.pure[R, ValidatedNel[ExcelParseError, Int]](Valid(skipLineCount))
-        }
-      } yield result.map(_.toEither).toEither.flatten.toValidated
-
-    ExcelRowReads.from[R, SkipOnlyEmpties, Int] { implicit m =>
-      loop(0)
-    }
-  }
-
-  implicit def manyInstance[Row, R, U, A](implicit
-    sym: ExcelRowSYM[Row, U, Eff[R, *]],
-    reads: ExcelReads[U, A]
-  ): ExcelRowReads[R, Many[A]] = {
-    // This function is NOT tail recursive!
-    def loop(
-      as: Seq[A]
-    )(implicit
-      m: State[Int, *] |= R
-    ): Eff[R, ValidatedNel[ExcelParseError, Seq[A]]] = {
-      val asResult = Eff.pure[R, ValidatedNel[ExcelParseError, Seq[A]]](Valid(as))
-
-      for {
-        s <- get
-        isEmpty <- sym.isEmpty(s)
-        result <- Eff.traverseA(isEmpty) {
-          case true =>
-            asResult
-          case false =>
-            for {
-              validationA <- sym.withRow(s, reads)
-              result <- validationA match {
-                case Valid(a) =>
-                  put(s + 1) >> loop(as :+ a)
-                case Invalid(_) =>
-                  asResult
-              }
-            } yield result
-        }
-      } yield result.map(x => x.toEither).toEither.flatten.toValidated // HELP!
+        styleOpt <- sym.getStyle(s)
+      } yield styleOpt
     }
 
-    ExcelRowReads.from[R, Many[A], Seq[A]] { implicit m =>
-      loop(Seq.empty[A])
-    }
-  }
+  /** This instance only can parse the type whose sequence is at the end. If we want to parse any place on the type, it
+    * requires backtrack like regular-expression matcher. It's hard to implement so I haven't implemented it yet for
+    * now.
+    */
+  implicit def listInstance[R, A](implicit
+    reads: ExcelRowReads[R, Option[A]]
+  ): ExcelRowReads[R, List[A]] =
+    ExcelRowReads.from { implicit m =>
+      def loop(
+        acc: ValidatedNel[ExcelParseError, List[A]]
+      ): Eff[R, ValidatedNel[ExcelParseError, List[A]]] =
+        for {
+          value <- reads.parse
+          result <- value match {
+            case Valid(Some(a)) =>
+              loop(acc.map(a :: _))
 
-  implicit def optionalInstance[Row, R, U, A](implicit
-    sym: ExcelRowSYM[Row, U, Eff[R, *]],
-    reads: ExcelReads[U, A]
-  ): ExcelRowReads[R, Optional[A]] = {
-    val emptyResult = Eff.pure[R, ValidatedNel[ExcelParseError, Option[A]]](Valid(None))
+            case Valid(None) =>
+              Eff.pure[R, ValidatedNel[ExcelParseError, List[A]]](acc.map(_.reverse))
 
-    ExcelRowReads.from[R, Optional[A], Option[A]] { implicit m =>
-      for {
-        s <- get
-        isEmpty <- sym.isEmpty(s)
-        result <- Eff.traverseA(isEmpty) {
-          case true =>
-            emptyResult
-          case false =>
-            for {
-              validationA <- sym.withRow(s, reads)
-              result <- validationA match {
-                case Valid(a) =>
-                  put(s + 1).map(_ => Valid(Some(a)): ValidatedNel[ExcelParseError, Option[A]])
-                case Invalid(_) =>
-                  emptyResult
-              }
-            } yield result
-        }
-      } yield result.map(x => x.toEither).toEither.flatten.toValidated
+            case Invalid(e) =>
+              // To collect all errors.
+              loop(acc.leftMap(l => e ::: l))
+          }
+        } yield result
+
+      loop(Valid(Nil))
     }
-  }
 }
 
-trait ExcelRowReadsLowPriorityInstances {
-  implicit def aInstance[Row, R, U, A](implicit
-    sym: ExcelRowSYM[Row, U, Eff[R, *]],
-    reads: ExcelReads[U, A]
+trait ExcelReadsLowPriorityInstance {
+  implicit def aInstance[R, A](implicit
+    reads: ExcelRowReads[R, Option[A]]
   ): ExcelRowReads[R, A] =
-    ExcelRowReads.from[R, A, A] { implicit m =>
+    ExcelRowReads.from { implicit m =>
       for {
         s <- get
-        validationA <- sym.withRow(s, reads)
-        _ <- put(s + 1)
-      } yield validationA
+        result <- reads.parse
+      } yield result.andThen {
+        case Some(a) => Valid(a)
+        case None =>
+          Invalid(
+            NonEmptyList(UnexpectedEmptyCell(s), Nil)
+          )
+      }
     }
 }

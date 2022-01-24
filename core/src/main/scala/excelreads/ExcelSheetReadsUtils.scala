@@ -1,22 +1,21 @@
-package excelreads.row
+package excelreads
 
 import cats.data.State
 import cats.data.ValidatedNel
-import excelreads.ExcelRowReads
 import excelreads.exception.ExcelParseError
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 
-trait ExcelRowReadsUtils {
+trait ExcelSheetReadsUtils {
   def parse[R, A](implicit
     m: State[Int, *] |= R,
-    r1: ExcelRowReads[R, A]
+    r1: ExcelSheetReads[R, A]
   ): Eff[R, ValidatedNel[ExcelParseError, r1.Result]] = r1.parse
 
   def parse[R, A, B](implicit
     m: State[Int, *] |= R,
-    r1: ExcelRowReads[R, A],
-    r2: ExcelRowReads[R, B]
+    r1: ExcelSheetReads[R, A],
+    r2: ExcelSheetReads[R, B]
   ): Eff[R, ValidatedNel[ExcelParseError, (r1.Result, r2.Result)]] =
     for {
       o1 <- r1.parse
@@ -25,9 +24,9 @@ trait ExcelRowReadsUtils {
 
   def parse[R, A, B, C](implicit
     m: State[Int, *] |= R,
-    r1: ExcelRowReads[R, A],
-    r2: ExcelRowReads[R, B],
-    r3: ExcelRowReads[R, C]
+    r1: ExcelSheetReads[R, A],
+    r2: ExcelSheetReads[R, B],
+    r3: ExcelSheetReads[R, C]
   ): Eff[R, ValidatedNel[ExcelParseError, (r1.Result, r2.Result, r3.Result)]] =
     for {
       o1 <- r1.parse
@@ -39,10 +38,10 @@ trait ExcelRowReadsUtils {
 
   def parse[R, A, B, C, D](implicit
     m: State[Int, *] |= R,
-    r1: ExcelRowReads[R, A],
-    r2: ExcelRowReads[R, B],
-    r3: ExcelRowReads[R, C],
-    r4: ExcelRowReads[R, D]
+    r1: ExcelSheetReads[R, A],
+    r2: ExcelSheetReads[R, B],
+    r3: ExcelSheetReads[R, C],
+    r4: ExcelSheetReads[R, D]
   ): Eff[R, ValidatedNel[ExcelParseError, (r1.Result, r2.Result, r3.Result, r4.Result)]] =
     for {
       o1 <- r1.parse
@@ -55,11 +54,11 @@ trait ExcelRowReadsUtils {
 
   def parse[R, A, B, C, D, E](implicit
     m: State[Int, *] |= R,
-    r1: ExcelRowReads[R, A],
-    r2: ExcelRowReads[R, B],
-    r3: ExcelRowReads[R, C],
-    r4: ExcelRowReads[R, D],
-    r5: ExcelRowReads[R, E]
+    r1: ExcelSheetReads[R, A],
+    r2: ExcelSheetReads[R, B],
+    r3: ExcelSheetReads[R, C],
+    r4: ExcelSheetReads[R, D],
+    r5: ExcelSheetReads[R, E]
   ): Eff[R, ValidatedNel[ExcelParseError, (r1.Result, r2.Result, r3.Result, r4.Result, r5.Result)]] =
     for {
       o1 <- r1.parse
@@ -73,12 +72,12 @@ trait ExcelRowReadsUtils {
 
   def parse[R, A, B, C, D, E, F](implicit
     m: State[Int, *] |= R,
-    r1: ExcelRowReads[R, A],
-    r2: ExcelRowReads[R, B],
-    r3: ExcelRowReads[R, C],
-    r4: ExcelRowReads[R, D],
-    r5: ExcelRowReads[R, E],
-    r6: ExcelRowReads[R, F]
+    r1: ExcelSheetReads[R, A],
+    r2: ExcelSheetReads[R, B],
+    r3: ExcelSheetReads[R, C],
+    r4: ExcelSheetReads[R, D],
+    r5: ExcelSheetReads[R, E],
+    r6: ExcelSheetReads[R, F]
   ): Eff[R, ValidatedNel[ExcelParseError, (r1.Result, r2.Result, r3.Result, r4.Result, r5.Result, r6.Result)]] =
     for {
       o1 <- r1.parse
