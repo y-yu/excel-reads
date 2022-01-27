@@ -17,7 +17,6 @@ import org.atnos.eff.|=
 import scala.util.control.NonFatal
 import org.atnos.eff.syntax.all.*
 import cats.implicits.*
-import excelreads.instance.ValidatedMonadInstance.*
 import org.atnos.eff.Fx
 import excelreads.apache.poi.sym.ApachePoiExcelRowSYM.ApachePoiExcelReadsStack
 

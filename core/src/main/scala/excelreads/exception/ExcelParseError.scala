@@ -1,5 +1,7 @@
 package excelreads.exception
 
+import cats.data.NonEmptyList
+
 /** Base class of a parse error.
   */
 abstract class ExcelParseError(
@@ -10,7 +12,8 @@ abstract class ExcelParseError(
   with Product
   with Serializable
 
-object ExcelParseError {
+object ExcelParseError extends ExcelParseErrorCreation {
+  type ExcelParseErrors = NonEmptyList[ExcelParseError]
 
   /** Cell type error.
     *

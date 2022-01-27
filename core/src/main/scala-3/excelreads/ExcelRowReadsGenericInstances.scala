@@ -5,12 +5,13 @@ import cats.data.State
 import cats.data.ValidatedNel
 import cats.data.Validated.Valid
 import excelreads.exception.ExcelParseError
+import excelreads.exception.ExcelParseError.ExcelParseErrors
 import excelreads.instance.ExcelRowReadsInstances
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
 import scala.compiletime.*
 import scala.deriving.*
-import excelreads.instance.ValidatedMonadInstance.*
+import org.atnos.eff.syntax.all.*
 
 trait ExcelRowReadsGenericInstances { self: ExcelRowReadsInstances =>
 
@@ -34,23 +35,23 @@ trait ExcelRowReadsGenericInstances { self: ExcelRowReadsInstances =>
     def loop(
       xs: List[ExcelRowReads[R, _]],
       acc: List[_]
-    )(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, List[_]]] =
+    )(implicit
+      m1: State[Int, *] |= R,
+      m2: Either[ExcelParseErrors, *] |= R
+    ): Eff[R, List[_]] =
       xs match {
         case Nil =>
-          Eff.pure[R, ValidatedNel[ExcelParseError, List[?]]](Valid(acc))
+          acc.pureEff[R]
 
-        case x :: t =>
+        case x :: ts =>
           for {
-            h <- x.parse
-            result <- Eff.flatTraverseA(h) { a =>
-              loop(t, acc :+ a)
-            }
+            a <- x.parse
+            result <- loop(ts, acc :+ a)
           } yield result
       }
 
-    new ExcelRowReads[R, A] {
-      def parse(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, A]] =
-        loop(xs, Nil).map(_.map(vs => a.fromProduct(new SeqProduct(vs))))
+    ExcelRowReads.from { implicit m1 => implicit m2 =>
+      loop(xs, Nil).map(vs => a.fromProduct(new SeqProduct(vs)))
     }
   }
 

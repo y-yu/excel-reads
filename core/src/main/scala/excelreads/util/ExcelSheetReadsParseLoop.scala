@@ -1,15 +1,12 @@
 package excelreads.util
 
 import cats.data.State
-import cats.data.Validated.Invalid
-import cats.data.Validated.Valid
-import cats.data.ValidatedNel
 import excelreads.ExcelRowQuantifier.End
 import excelreads.ExcelSheetReads
-import excelreads.exception.ExcelParseError
+import excelreads.exception.ExcelParseError.ExcelParseErrors
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
-import excelreads.instance.ValidatedMonadInstance.*
+import org.atnos.eff.syntax.all.*
 
 trait ExcelSheetReadsParseLoop {
   private def loopInternal[R, A, B](
@@ -17,47 +14,46 @@ trait ExcelSheetReadsParseLoop {
   )(
     transform: reads.Result => B
   )(implicit
-    m: State[Int, *] |= R,
+    m1: State[Int, *] |= R,
+    m2: Either[ExcelParseErrors, *] |= R,
     end: ExcelSheetReads[R, End]
-  ): Eff[R, ValidatedNel[ExcelParseError, Seq[B]]] =
+  ): Eff[R, Seq[B]] =
     for {
-      aValidation <- reads.parse
-      result <- aValidation match {
-        case Valid(a) =>
-          loop1[R, A](end, reads, m).map { _.map(as => a +: as) }
-        case Invalid(e) =>
+      isEnd <- end.parse
+      result <- isEnd match {
+        case true =>
+          Seq.empty.pureEff[R]
+        case false =>
           for {
-            isEnd <- end.parse
-            isValidEnd <- Eff.flatTraverseA(isEnd) {
-              case true =>
-                Eff.pure[R, ValidatedNel[ExcelParseError, Seq[reads.Result]]](Valid(Seq.empty))
-              case false =>
-                Eff.pure[R, ValidatedNel[ExcelParseError, Seq[reads.Result]]](Invalid(e))
-            }
-          } yield isValidEnd
+            a <- reads.parse
+            ts <- loop1(end, reads, m1, m2)
+          } yield a +: ts
       }
-    } yield result.map(_.map(transform))
+    } yield result.map(transform)
 
   private def loop1[R, A](implicit
     end: ExcelSheetReads[R, End],
     r1: ExcelSheetReads[R, A],
-    m: State[Int, *] |= R
-  ): Eff[R, ValidatedNel[ExcelParseError, Seq[r1.Result]]] =
+    m1: State[Int, *] |= R,
+    m2: Either[ExcelParseErrors, *] |= R
+  ): Eff[R, Seq[r1.Result]] =
     loopInternal[R, A, r1.Result](r1)(x => x)
 
   def loop[R, A](implicit
     end: ExcelSheetReads[R, End],
     r1: ExcelSheetReads[R, A],
-    m: State[Int, *] |= R
-  ): Eff[R, ValidatedNel[ExcelParseError, Seq[r1.Result]]] =
+    m1: State[Int, *] |= R,
+    m2: Either[ExcelParseErrors, *] |= R
+  ): Eff[R, Seq[r1.Result]] =
     loop1[R, A]
 
   def loop[R, A, B](implicit
     end: ExcelSheetReads[R, End],
     r1: ExcelSheetReads[R, A],
     r2: ExcelSheetReads[R, B],
-    m: State[Int, *] |= R
-  ): Eff[R, ValidatedNel[ExcelParseError, Seq[(r1.Result, r2.Result)]]] = {
+    m1: State[Int, *] |= R,
+    m2: Either[ExcelParseErrors, *] |= R
+  ): Eff[R, Seq[(r1.Result, r2.Result)]] = {
     loopInternal[R, (A, B), (r1.Result, r2.Result)](
       r1 product r2
     ) {
@@ -72,8 +68,9 @@ trait ExcelSheetReadsParseLoop {
     r1: ExcelSheetReads[R, A],
     r2: ExcelSheetReads[R, B],
     r3: ExcelSheetReads[R, C],
-    m: State[Int, *] |= R
-  ): Eff[R, ValidatedNel[ExcelParseError, Seq[(r1.Result, r2.Result, r3.Result)]]] =
+    m1: State[Int, *] |= R,
+    m2: Either[ExcelParseErrors, *] |= R
+  ): Eff[R, Seq[(r1.Result, r2.Result, r3.Result)]] =
     loopInternal[R, ((A, B), C), (r1.Result, r2.Result, r3.Result)](
       r1 product r2 product r3
     ) {
@@ -88,8 +85,9 @@ trait ExcelSheetReadsParseLoop {
     r2: ExcelSheetReads[R, B],
     r3: ExcelSheetReads[R, C],
     r4: ExcelSheetReads[R, D],
-    m: State[Int, *] |= R
-  ): Eff[R, ValidatedNel[ExcelParseError, Seq[(r1.Result, r2.Result, r3.Result, r4.Result)]]] =
+    m1: State[Int, *] |= R,
+    m2: Either[ExcelParseErrors, *] |= R
+  ): Eff[R, Seq[(r1.Result, r2.Result, r3.Result, r4.Result)]] =
     loopInternal[R, (((A, B), C), D), (r1.Result, r2.Result, r3.Result, r4.Result)](
       r1 product r2 product r3 product r4
     ) {
