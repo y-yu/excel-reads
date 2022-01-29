@@ -44,7 +44,7 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
         s <- get
         isEmptyAndEnd <- sym.isEmpty product sym.isEnd
         result <-
-          if (isEmptyAndEnd._1 && isEmptyAndEnd._2) {
+          if (isEmptyAndEnd._1 && !isEmptyAndEnd._2) {
             put(s + 1) >> loop(skipLineCount + 1)
           } else {
             Eff.pure[R, Int](skipLineCount)

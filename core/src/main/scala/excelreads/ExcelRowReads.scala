@@ -4,7 +4,6 @@ import cats.data.State
 import excelreads.exception.ExcelParseError.ExcelParseErrors
 import excelreads.instance.ExcelRowReadsInstances
 import org.atnos.eff.Eff
-import org.atnos.eff./=
 import org.atnos.eff.|=
 
 /** Excel row parser type class

@@ -25,7 +25,7 @@ abstract class ExcelSheetReads[R, A] { self =>
     m2: Either[ExcelParseErrors, *] |= R
   ): Eff[R, Result]
 
-  final def product[B](reads: ExcelSheetReads[R, B]): ExcelSheetReads[R, (A, B)] =
+  final def andThen[B](reads: ExcelSheetReads[R, B]): ExcelSheetReads[R, (A, B)] =
     new ExcelSheetReads[R, (A, B)] {
       type Result = (self.Result, reads.Result)
 
@@ -33,7 +33,10 @@ abstract class ExcelSheetReads[R, A] { self =>
         m1: State[Int, *] |= R,
         m2: Either[ExcelParseErrors, *] |= R
       ): Eff[R, (self.Result, reads.Result)] =
-        self.parse product reads.parse
+        for {
+          a <- self.parse
+          b <- reads.parse
+        } yield (a, b)
     }
 }
 

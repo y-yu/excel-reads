@@ -1,21 +1,15 @@
 package excelreads.util
 
-import cats.data.State
 import excelreads.ExcelSheetReads
-import excelreads.exception.ExcelParseError.ExcelParseErrors
+import excelreads.eff.ExcelReadsEffects.*
 import org.atnos.eff.Eff
-import org.atnos.eff.|=
 
 trait ExcelSheetReadsParse {
-  def parse[R, A](implicit
-    m1: State[Int, *] |= R,
-    m2: Either[ExcelParseErrors, *] |= R,
+  def parse[R: _state: _either, A](implicit
     r1: ExcelSheetReads[R, A]
   ): Eff[R, r1.Result] = r1.parse
 
-  def parse[R, A, B](implicit
-    m1: State[Int, *] |= R,
-    m2: Either[ExcelParseErrors, *] |= R,
+  def parse[R: _state: _either, A, B](implicit
     r1: ExcelSheetReads[R, A],
     r2: ExcelSheetReads[R, B]
   ): Eff[R, (r1.Result, r2.Result)] =
@@ -24,9 +18,7 @@ trait ExcelSheetReadsParse {
       b <- r2.parse
     } yield (a, b)
 
-  def parse[R, A, B, C](implicit
-    m1: State[Int, *] |= R,
-    m2: Either[ExcelParseErrors, *] |= R,
+  def parse[R: _state: _either, A, B, C](implicit
     r1: ExcelSheetReads[R, A],
     r2: ExcelSheetReads[R, B],
     r3: ExcelSheetReads[R, C]
@@ -37,9 +29,7 @@ trait ExcelSheetReadsParse {
       c <- r3.parse
     } yield (a, b, c)
 
-  def parse[R, A, B, C, D](implicit
-    m1: State[Int, *] |= R,
-    m2: Either[ExcelParseErrors, *] |= R,
+  def parse[R: _state: _either, A, B, C, D](implicit
     r1: ExcelSheetReads[R, A],
     r2: ExcelSheetReads[R, B],
     r3: ExcelSheetReads[R, C],
@@ -52,9 +42,7 @@ trait ExcelSheetReadsParse {
       d <- r4.parse
     } yield (a, b, c, d)
 
-  def parse[R, A, B, C, D, E](implicit
-    m1: State[Int, *] |= R,
-    m2: Either[ExcelParseErrors, *] |= R,
+  def parse[R: _state: _either, A, B, C, D, E](implicit
     r1: ExcelSheetReads[R, A],
     r2: ExcelSheetReads[R, B],
     r3: ExcelSheetReads[R, C],
@@ -69,9 +57,7 @@ trait ExcelSheetReadsParse {
       e <- r5.parse
     } yield (a, b, c, d, e)
 
-  def parse[R, A, B, C, D, E, F](implicit
-    m1: State[Int, *] |= R,
-    m2: Either[ExcelParseErrors, *] |= R,
+  def parse[R: _state: _either, A, B, C, D, E, F](implicit
     r1: ExcelSheetReads[R, A],
     r2: ExcelSheetReads[R, B],
     r3: ExcelSheetReads[R, C],
