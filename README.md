@@ -20,7 +20,7 @@ case class HelloWorld(
   world: String
 )
 
-type R = Fx.fx2[Reader[ApachePoiSheet, *], State[Int, *]]
+type R = Fx.fx3[Reader[ApachePoiSheet, *], State[Int, *], Either[ExcelParseErrors, *]]
 
 val workbook = WorkbookFactory.create(
   new File("/test.xlsx")
@@ -29,11 +29,12 @@ val sheet = ApachePoiSheet(workbook.getSheet("Sheet1"))
 
 val actual = ExcelSheetReads
   .parse[R, HelloWorld]
-  .runReader(sheet)
   .evalState(0)
+  .runReader(sheet)
+  .runEither
   .run
 
-assert(actual == Valid(HelloWorld("hello", "world")))
+assert(actual == Right(HelloWorld("hello", "world")))
 ```
 
 See also [tests](https://github.com/y-yu/excel-reads/tree/master/modules/apache-poi/src/test/scala/excelreads/apache/poi).

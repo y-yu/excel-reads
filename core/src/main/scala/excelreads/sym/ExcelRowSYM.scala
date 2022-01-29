@@ -2,9 +2,8 @@ package excelreads.sym
 
 import cats.Monad
 import cats.data.State
-import cats.data.ValidatedNel
 import excelreads.ExcelRowReads
-import excelreads.exception.ExcelParseError
+import excelreads.exception.ExcelParseError.ExcelParseErrors
 import org.atnos.eff.|=
 
 /** Basic getter interface from an Excel row
@@ -15,20 +14,13 @@ import org.atnos.eff.|=
 abstract class ExcelRowSYM[Row, R, F[_]: Monad](implicit
   m: State[Int, *] |= R
 ) {
-  def isEmpty(
-    index: Int
-  ): F[ValidatedNel[ExcelParseError, Boolean]]
+  def isEmpty: F[Boolean]
 
-  def isEnd(
-    index: Int
-  ): F[ValidatedNel[ExcelParseError, Boolean]]
+  def isEnd: F[Boolean]
 
-  def getRow(
-    index: Int
-  ): F[ValidatedNel[ExcelParseError, Row]]
+  def getRow: F[Row]
 
   def withRow[A](
-    index: Int,
     f: ExcelRowReads[R, A]
-  ): F[ValidatedNel[ExcelParseError, A]]
+  ): F[Either[ExcelParseErrors, A]]
 }

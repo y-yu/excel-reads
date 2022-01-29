@@ -3,81 +3,78 @@ package excelreads.apache.poi.sym
 import cats.data.NonEmptyList
 import cats.data.Reader
 import cats.data.State
-import cats.data.Validated.Invalid
-import cats.data.Validated.Valid
-import cats.data.ValidatedNel
 import excelreads.ExcelRowReads
 import excelreads.apache.poi.ApachePoiRow
 import excelreads.apache.poi.ApachePoiSheet
 import excelreads.exception.ExcelParseError
 import excelreads.sym.ExcelRowSYM
-import org.atnos.eff.Eff
-import org.atnos.eff.reader.ask
-import org.atnos.eff.|=
-import scala.util.control.NonFatal
-import org.atnos.eff.syntax.all.*
 import cats.implicits.*
-import excelreads.instance.ValidatedMonadInstance.*
+import org.atnos.eff.Eff
+import org.atnos.eff.syntax.all.*
+import org.atnos.eff.state.*
+import org.atnos.eff.reader.*
+import org.atnos.eff.either.*
 import org.atnos.eff.Fx
 import excelreads.apache.poi.sym.ApachePoiExcelRowSYM.ApachePoiExcelReadsStack
+import excelreads.eff.ExcelReadsEffects.*
+import excelreads.exception.ExcelParseError.ExcelParseErrors
+import excelreads.exception.ExcelParseError.UnexpectedCellInRow
 
-class ApachePoiExcelRowSYM[R](implicit
-  m: Reader[ApachePoiSheet, *] |= R
-) extends ExcelRowSYM[ApachePoiRow, ApachePoiExcelReadsStack, Eff[R, *]] {
-  override def isEmpty(index: Int): Eff[R, ValidatedNel[ExcelParseError, Boolean]] =
-    for {
-      sheet <- ask
-    } yield try {
-      Valid(Option(sheet.value.getRow(index)).isEmpty)
-    } catch {
-      case NonFatal(e) =>
-        Invalid(
-          NonEmptyList(ExcelParseError.UnknownError(index, e.getMessage, e), Nil)
-        )
-    }
+/** Apache POI's implementation of rows operation
+  *
+  * @tparam R
+  *   Effect stack for parsing rows
+  */
+class ApachePoiExcelRowSYM[
+  R: _reader[ApachePoiSheet, *]: _state: _either
+] extends ExcelRowSYM[ApachePoiRow, ApachePoiExcelReadsStack, Eff[R, *]] {
+  private def toErrors[A](index: Int)(e: Throwable): ExcelParseErrors =
+    NonEmptyList(ExcelParseError.UnknownError(index, e.getMessage, e), Nil)
 
-  override def isEnd(index: Int): Eff[R, ValidatedNel[ExcelParseError, Boolean]] =
+  override def isEmpty: Eff[R, Boolean] =
     for {
+      index <- get
       sheet <- ask
-    } yield try {
-      Valid(sheet.value.getLastRowNum < index)
-    } catch {
-      case NonFatal(e) =>
-        Invalid(
-          NonEmptyList(ExcelParseError.UnknownError(index, e.getMessage, e), Nil)
-        )
-    }
+      result <-
+        fromCatchNonFatal(Option(sheet.value.getRow(index)).isEmpty)(toErrors(index))
+    } yield result
 
-  override def getRow(index: Int): Eff[R, ValidatedNel[ExcelParseError, ApachePoiRow]] =
+  override def isEnd: Eff[R, Boolean] =
     for {
+      index <- get
       sheet <- ask
-    } yield try {
-      // FIX ME
-      Valid(
-        ApachePoiRow(sheet.value.getRow(index))
-      )
-    } catch {
-      case NonFatal(e) =>
-        Invalid(
-          NonEmptyList(ExcelParseError.UnknownError(index, e.getMessage, e), Nil)
-        )
-    }
+      result <-
+        fromCatchNonFatal(sheet.value.getLastRowNum <= index)(toErrors(index))
+    } yield result
+
+  override def getRow: Eff[R, ApachePoiRow] =
+    for {
+      index <- get
+      sheet <- ask
+      result <-
+        fromCatchNonFatal(ApachePoiRow(sheet.value.getRow(index)))(toErrors(index))
+    } yield result
 
   override def withRow[A](
-    index: Int,
     reads: ExcelRowReads[ApachePoiExcelReadsStack, A]
-  ): Eff[R, ValidatedNel[ExcelParseError, A]] =
+  ): Eff[R, Either[ExcelParseErrors, A]] =
     for {
-      validationRow <- getRow(index)
-    } yield validatedMonadInstance.flatMap(validationRow) { row =>
-      reads.parse
-        .runReader(row)
-        .evalState(0)
-        .run
-    }
-
+      index <- get
+      row <- getRow
+      result <-
+        reads.parse
+          .runReader(row)
+          .evalState(0)
+          .runEither
+          .run
+          .leftMap { (es: ExcelParseErrors) =>
+            NonEmptyList(UnexpectedCellInRow(index, es), Nil)
+          }
+          .pureEff[R]
+    } yield result
 }
 
 object ApachePoiExcelRowSYM {
-  type ApachePoiExcelReadsStack = Fx.fx2[Reader[ApachePoiRow, *], State[Int, *]]
+  type ApachePoiExcelReadsStack =
+    Fx.fx3[Reader[ApachePoiRow, *], State[Int, *], Either[ExcelParseErrors, *]]
 }

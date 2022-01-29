@@ -2,40 +2,33 @@ package excelreads.instance
 
 import cats.implicits.*
 import cats.data.State
-import cats.data.Validated.Invalid
-import cats.data.Validated.Valid
-import cats.data.ValidatedNel
 import excelreads.ExcelRowReads
 import excelreads.ExcelRowQuantifier.*
 import excelreads.ExcelSheetReads
-import excelreads.exception.ExcelParseError
+import excelreads.exception.ExcelParseError.ExcelParseErrors
 import excelreads.sym.ExcelRowSYM
 import org.atnos.eff.Eff
 import org.atnos.eff.state.*
+import org.atnos.eff.either.*
 import org.atnos.eff.syntax.all.*
 import org.atnos.eff.|=
-import excelreads.instance.ValidatedMonadInstance.*
 
 trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
   implicit def endInstance[Row, R, A](implicit
     sym: ExcelRowSYM[Row, _, Eff[R, *]]
   ): ExcelSheetReads[R, End] =
-    ExcelSheetReads.from[R, End, Boolean] { implicit m =>
+    ExcelSheetReads.from[R, End, Boolean] { implicit m1 => implicit m2 =>
       for {
-        s <- get
-        isEmpty <- sym.isEmpty(s)
-        isEnd <- sym.isEnd(s)
-      } yield (isEmpty product isEnd) map { case (x, y) =>
-        x && y
-      }
+        isEmptyAndEnd <- sym.isEmpty product sym.isEnd
+      } yield isEmptyAndEnd._1 && isEmptyAndEnd._2
     }
 
   implicit def skipInstance[Row, R, A]: ExcelSheetReads[R, Skip] =
-    ExcelSheetReads.from[R, Skip, Unit] { implicit m =>
+    ExcelSheetReads.from[R, Skip, Unit] { implicit m1 => implicit m2 =>
       for {
         s <- get
         _ <- put(s + 1)
-      } yield Valid(())
+      } yield ()
     }
 
   implicit def skipOnlyEmptiesInstance[Row, R, A](implicit
@@ -44,24 +37,21 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
     def loop(
       skipLineCount: Int
     )(implicit
-      m: State[Int, *] |= R
-    ): Eff[R, ValidatedNel[ExcelParseError, Int]] =
+      m1: State[Int, *] |= R,
+      m2: Either[ExcelParseErrors, *] |= R
+    ): Eff[R, Int] =
       for {
         s <- get
-        isEmpty <- sym.isEmpty(s)
-        isEnd <- sym.isEnd(s)
-        result <- Eff.flatTraverseA(
-          (isEmpty product isEnd) map { case (x, y) =>
-            x && !y // empty, NOT end
+        isEmptyAndEnd <- sym.isEmpty product sym.isEnd
+        result <-
+          if (isEmptyAndEnd._1 && !isEmptyAndEnd._2) {
+            put(s + 1) >> loop(skipLineCount + 1)
+          } else {
+            Eff.pure[R, Int](skipLineCount)
           }
-        ) {
-          case true => put(s + 1) >> loop(skipLineCount + 1)
-          case false =>
-            Eff.pure[R, ValidatedNel[ExcelParseError, Int]](Valid(skipLineCount))
-        }
       } yield result
 
-    ExcelSheetReads.from[R, SkipOnlyEmpties, Int] { implicit m =>
+    ExcelSheetReads.from[R, SkipOnlyEmpties, Int] { implicit m1 => implicit m2 =>
       loop(0)
     }
   }
@@ -74,31 +64,29 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
     def loop(
       as: Seq[A]
     )(implicit
-      m: State[Int, *] |= R
-    ): Eff[R, ValidatedNel[ExcelParseError, Seq[A]]] = {
-      val asResult = Eff.pure[R, ValidatedNel[ExcelParseError, Seq[A]]](Valid(as))
-
+      m1: State[Int, *] |= R,
+      m2: Either[ExcelParseErrors, *] |= R
+    ): Eff[R, Seq[A]] =
       for {
         s <- get
-        isEmpty <- sym.isEmpty(s)
-        result <- Eff.flatTraverseA(isEmpty) {
-          case true =>
-            asResult
-          case false =>
+        isEmpty <- sym.isEmpty
+        result <-
+          if (isEmpty) {
+            as.pureEff[R]
+          } else {
             for {
-              validationA <- sym.withRow(s, reads)
-              result <- validationA match {
-                case Valid(a) =>
-                  put(s + 1) >> loop(as :+ a)
-                case Invalid(_) =>
-                  asResult
+              ae <- sym.withRow(reads)
+              result <- Eff.traverseA(ae) { a =>
+                put(s + 1) >> loop(as :+ a)
               }
-            } yield result
-        }
+            } yield result.fold(
+              { _ => as },
+              identity
+            )
+          }
       } yield result
-    }
 
-    ExcelSheetReads.from[R, Many[A], Seq[A]] { implicit m =>
+    ExcelSheetReads.from[R, Many[A], Seq[A]] { implicit m1 => implicit m2 =>
       loop(Seq.empty[A])
     }
   }
@@ -106,30 +94,27 @@ trait ExcelSheetReadsInstances extends ExcelSheetReadsLowPriorityInstances {
   implicit def optionalInstance[Row, R, U, A](implicit
     sym: ExcelRowSYM[Row, U, Eff[R, *]],
     reads: ExcelRowReads[U, A]
-  ): ExcelSheetReads[R, Optional[A]] = {
-    val emptyResult = Eff.pure[R, ValidatedNel[ExcelParseError, Option[A]]](Valid(None))
-
-    ExcelSheetReads.from[R, Optional[A], Option[A]] { implicit m =>
+  ): ExcelSheetReads[R, Optional[A]] =
+    ExcelSheetReads.from[R, Optional[A], Option[A]] { implicit m1 => implicit m2 =>
       for {
         s <- get
-        isEmpty <- sym.isEmpty(s)
-        result <- Eff.flatTraverseA(isEmpty) {
-          case true =>
-            emptyResult
-          case false =>
+        isEmpty <- sym.isEmpty
+        result <-
+          if (isEmpty) {
+            Option.empty[A].pureEff[R]
+          } else {
             for {
-              validationA <- sym.withRow(s, reads)
-              result <- validationA match {
-                case Valid(a) =>
-                  put(s + 1).map(_ => Valid(Some(a)): ValidatedNel[ExcelParseError, Option[A]])
-                case Invalid(_) =>
-                  emptyResult
+              ae <- sym.withRow(reads)
+              result <- Eff.traverseA(ae) { a =>
+                put(s + 1).map(_ => a)
               }
-            } yield result
-        }
+            } yield result.fold(
+              _ => Option.empty[A],
+              x => Option(x)
+            )
+          }
       } yield result
     }
-  }
 }
 
 trait ExcelSheetReadsLowPriorityInstances {
@@ -137,14 +122,11 @@ trait ExcelSheetReadsLowPriorityInstances {
     sym: ExcelRowSYM[Row, U, Eff[R, *]],
     reads: ExcelRowReads[U, A]
   ): ExcelSheetReads[R, A] =
-    ExcelSheetReads.from[R, A, A] { implicit m =>
+    ExcelSheetReads.from[R, A, A] { implicit m1 => implicit m2 =>
       for {
         s <- get
-        validationA <- sym.withRow(s, reads)
-
-        _ <- Eff.traverseA(validationA) { _ =>
-          put(s + 1)
-        }
-      } yield validationA
+        a <- sym.withRow(reads).flatMap(fromEither[R, ExcelParseErrors, A])
+        _ <- put(s + 1)
+      } yield a
     }
 }

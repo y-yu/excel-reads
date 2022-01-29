@@ -1,17 +1,16 @@
 package excelreads.instance
 
 import cats.data.NonEmptyList
-import cats.data.Validated.Invalid
-import cats.data.Validated.Valid
-import cats.data.ValidatedNel
 import excelreads.ExcelRowReads
 import excelreads.ExcelRowReadsGenericInstances
-import excelreads.exception.ExcelParseError
+import excelreads.exception.ExcelParseError.ExcelParseErrors
 import excelreads.exception.ExcelParseError.UnexpectedEmptyCell
 import excelreads.sym.ExcelBasicSYM
 import excelreads.sym.ExcelStyleSYM
 import org.atnos.eff.Eff
 import org.atnos.eff.state.*
+import org.atnos.eff.syntax.all.*
+import org.atnos.eff.either.*
 
 /** Basic instances
   *
@@ -24,18 +23,16 @@ import org.atnos.eff.state.*
 trait ExcelRowReadsInstances extends ExcelRowReadsGenericInstances with ExcelReadsLowPriorityInstance {
   // Primitive instances
   private def basicInstance[R, A](
-    f: ExcelBasicSYM[Eff[R, *]] => Int => Eff[R, ValidatedNel[ExcelParseError, A]]
+    f: ExcelBasicSYM[Eff[R, *]] => Eff[R, A]
   )(implicit
     sym: ExcelBasicSYM[Eff[R, *]]
   ): ExcelRowReads[R, A] =
-    ExcelRowReads.from { implicit m =>
+    ExcelRowReads.from { implicit m1 => implicit m2 =>
       for {
+        a <- f(sym)
         s <- get
-        aValidation <- f(sym)(s)
-        _ <- Eff.traverseA(aValidation) { _ =>
-          put(s + 1)
-        }
-      } yield aValidation
+        _ <- put(s + 1)
+      } yield a
     }
 
   implicit def stringInstance[R](implicit
@@ -63,10 +60,10 @@ trait ExcelRowReadsInstances extends ExcelRowReadsGenericInstances with ExcelRea
   implicit def styleInstance[R, Style](implicit
     sym: ExcelStyleSYM[Style, Eff[R, *]]
   ): ExcelRowReads[R, Option[Style]] =
-    ExcelRowReads.from { implicit m =>
+    ExcelRowReads.from { implicit m1 => implicit m2 =>
       for {
         s <- get
-        styleOpt <- sym.getStyle(s)
+        styleOpt <- sym.getStyle
       } yield styleOpt
     }
 
@@ -77,26 +74,24 @@ trait ExcelRowReadsInstances extends ExcelRowReadsGenericInstances with ExcelRea
   implicit def listInstance[R, A](implicit
     reads: ExcelRowReads[R, Option[A]]
   ): ExcelRowReads[R, List[A]] =
-    ExcelRowReads.from { implicit m =>
+    ExcelRowReads.from { implicit m1 => implicit m2 =>
       def loop(
-        acc: ValidatedNel[ExcelParseError, List[A]]
-      ): Eff[R, ValidatedNel[ExcelParseError, List[A]]] =
+        acc: List[A]
+      ): Eff[R, List[A]] = {
+        reads.parse
         for {
           value <- reads.parse
           result <- value match {
-            case Valid(Some(a)) =>
-              loop(acc.map(a :: _))
+            case Some(a) =>
+              loop(a :: acc)
 
-            case Valid(None) =>
-              Eff.pure[R, ValidatedNel[ExcelParseError, List[A]]](acc.map(_.reverse))
-
-            case Invalid(e) =>
-              // To collect all errors.
-              loop(acc.leftMap(l => e ::: l))
+            case None =>
+              acc.reverse.pureEff[R]
           }
         } yield result
+      }
 
-      loop(Valid(Nil))
+      loop(Nil)
     }
 }
 
@@ -104,16 +99,14 @@ trait ExcelReadsLowPriorityInstance {
   implicit def aInstance[R, A](implicit
     reads: ExcelRowReads[R, Option[A]]
   ): ExcelRowReads[R, A] =
-    ExcelRowReads.from { implicit m =>
+    ExcelRowReads.from { implicit m1 => implicit m2 =>
       for {
         s <- get
-        result <- reads.parse
-      } yield result.andThen {
-        case Some(a) => Valid(a)
-        case None =>
-          Invalid(
-            NonEmptyList(UnexpectedEmptyCell(s), Nil)
-          )
-      }
+        opt <- reads.parse
+        a <- optionEither[R, ExcelParseErrors, A](
+          opt,
+          NonEmptyList(UnexpectedEmptyCell(s), Nil)
+        )
+      } yield a
     }
 }

@@ -1,5 +1,7 @@
 package excelreads.exception
 
+import cats.data.NonEmptyList
+
 /** Base class of a parse error.
   */
 abstract class ExcelParseError(
@@ -8,9 +10,13 @@ abstract class ExcelParseError(
   cause: Throwable
 ) extends Throwable(message, cause)
   with Product
-  with Serializable
+  with Serializable {
 
-object ExcelParseError {
+  def getIndex: Int = errorIndex
+}
+
+object ExcelParseError extends ExcelParseErrorCreation {
+  type ExcelParseErrors = NonEmptyList[ExcelParseError]
 
   /** Cell type error.
     *
@@ -41,6 +47,19 @@ object ExcelParseError {
         s"The cell($errorIndex) is empty."
       ),
       cause = cause
+    )
+
+  /** Something error is occurred in parsing rom
+    */
+  case class UnexpectedCellInRow(
+    errorRowIndex: Int,
+    cellError: ExcelParseErrors
+  ) extends ExcelParseError(
+      errorIndex = errorRowIndex,
+      message = s"""The row($errorRowIndex) has some errors:
+           |  ${cellError.map(_.getMessage).toList.mkString("*", "\n*", "")}
+           |""".stripMargin,
+      cause = cellError.head
     )
 
   /** The row is empty unexpectedly.

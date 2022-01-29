@@ -2,10 +2,8 @@ package excelreads.apache.poi
 
 import cats.data.Reader
 import cats.data.State
-import cats.data.Validated.Valid
-import excelreads.ExcelRowQuantifier.*
-import excelreads.ExcelSheetReads
-import excelreads.util.TestUtils
+import excelreads.ExcelRowReads
+import excelreads.exception.ExcelParseError.ExcelParseErrors
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -13,115 +11,72 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.atnos.eff.Fx
 import org.scalatest.diagrams.Diagrams
 import org.scalatest.flatspec.AnyFlatSpec
-import org.atnos.eff.syntax.all.*
 import java.io.File
+import org.atnos.eff.syntax.all.*
 
-class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
+class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams {
 
-  type R = Fx.fx2[Reader[ApachePoiSheet, *], State[Int, *]]
+  type R = Fx.fx3[Reader[ApachePoiRow, *], State[Int, *], Either[ExcelParseErrors, *]]
 
   trait SetUp {
     val workbook = new XSSFWorkbook
     val sheet = workbook.createSheet("Sheet1")
+    val row = ApachePoiRow(sheet.createRow(0))
     val style: CellStyle = workbook.createCellStyle()
     style.setFillBackgroundColor(IndexedColors.BLUE.index)
+    val cell = row.value.createCell(0)
 
-    val row1 = sheet.createRow(0)
-    val row2 = sheet.createRow(1)
-    val cell1 = row1.createCell(0)
-    cell1.setCellValue(2.0)
-    val cell2 = row2.createCell(0)
-    cell2.setCellValue("dummy")
+    cell.setCellValue(1.0)
+    cell.setCellStyle(style)
   }
 
-  "parse" should "return rows, for each has a `Int` and `String` cell" in new SetUp {
-    val actual = ExcelSheetReads
-      .parse[R, Int, String]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    assert(actual == Valid((2, "dummy")))
+  "reads" should "return `Int` from the `Option[Int]` instance" in new SetUp {
+    assert(
+      ExcelRowReads[R, Int].parse
+        .runReader(row)
+        .evalState(0)
+        .runEither
+        .run == Right(1)
+    )
   }
 
-  it should "return 100 `Int` rows" in new SetUp {
-    (0 until 100) foreach { i =>
-      val row = sheet.createRow(i)
-      val cell = row.createCell(0)
-      cell.setCellValue(i.toDouble)
-    }
-
-    val actual = ExcelSheetReads
-      .parse[R, Many[Int]]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    assert(actual == Valid(0 until 100))
+  it should "parse the case class consist of `Int`" in new SetUp {
+    case class OneInt(
+      value: Int
+    )
+    assert(
+      ExcelRowReads[R, OneInt].parse
+        .runReader(row)
+        .evalState(0)
+        .runEither
+        .run == Right(OneInt(1))
+    )
   }
 
-  it should "return `Seq[Int]` and `String` by `[Many[Int], String]`" in new SetUp {
-    val actual = ExcelSheetReads
-      .parse[R, Many[Int], String]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    assert(actual == Valid((Seq(2), "dummy")))
+  it should "get the cell style" in new SetUp {
+    case class IntAndStyle(
+      style: CellStyle,
+      value: Int
+    )
+    assert(
+      ExcelRowReads[R, IntAndStyle].parse
+        .runReader(row)
+        .evalState(0)
+        .runEither
+        .run == Right(IntAndStyle(style, 1))
+    )
   }
 
-  it should "return `Seq[Int]` and `Seq[String]` by `[Many[Int], Many[String]]`" in new SetUp {
-    val actual = ExcelSheetReads
-      .parse[R, Many[Int], Many[String]]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
+  it should "get the empty style from the empty cell" in new SetUp {
+    val row2 = ApachePoiRow(sheet.createRow(1))
 
-    assert(actual == Valid((Seq(2), Seq("dummy"))))
-  }
-
-  it should "return `Int` and `Some[String]` by `[Int, Optional[String]]`" in new SetUp {
-    val actual = ExcelSheetReads
-      .parse[R, Int, Optional[String]]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    assert(actual == Valid((2, Some("dummy"))))
-  }
-
-  it should "return `None`, `Int` and `Some[String]` by `[Optional[Boolean], Int, Optional[String]]`" in new SetUp {
-    val actual = ExcelSheetReads
-      .parse[R, Optional[Boolean], Int, Optional[String]]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    assert(actual == Valid((None, 2, Some("dummy"))))
-  }
-
-  it should "return `Unit`, String` by `[Skip, String]`" in new SetUp {
-    val actual = ExcelSheetReads
-      .parse[R, Skip, String]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    assert(actual == Valid(((), "dummy")))
-  }
-
-  it should "return `Int`, `Unit`, the number of skip lines and `Boolean` by `[Int, Skip, SkipOnlyEmpties, Boolean]`" in new SetUp {
-    val row = sheet.createRow(10)
-    val cell = row.createCell(0)
-    cell.setCellValue(true)
-
-    val actual = ExcelSheetReads
-      .parse[R, Int, Skip, SkipOnlyEmpties, Boolean]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    assert(actual == Valid((2, (), 8, true)))
+    assert(
+      ExcelRowReads[R, Option[CellStyle]].parse
+        .runReader(row2)
+        .evalState(0)
+        .runEither
+        .run == Right(None)
+    )
   }
 
   trait RealExcelSetUp {
@@ -129,107 +84,54 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtil
       new File(getClass.getResource("/test.xlsx").getFile)
     )
     val sheet = workbook.getSheet("Sheet1")
+    val rows = List(
+      ApachePoiRow(sheet.getRow(0)),
+      ApachePoiRow(sheet.getRow(1))
+    )
   }
 
-  it should "return case classes successfully from loading a real Excel file" in new RealExcelSetUp {
-    val actual = ExcelSheetReads
-      .parse[R, Many[RealExcelDataModel]]
-      .runReader(ApachePoiSheet(sheet))
+  it should "parse the case class successfully from loading a real Excel file" in new RealExcelSetUp {
+    val expected = List(
+      RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
+      RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
+    )
+    (rows zip expected).foreach { case (row, expected) =>
+      assert(
+        ExcelRowReads[R, RealExcelDataModel].parse
+          .runReader(row)
+          .evalState(0)
+          .runEither
+          .run == Right(expected)
+      )
+    }
+  }
+
+  it should "fail if the type is not match for the rows" in new RealExcelSetUp {
+    case class Dummy(
+      a1: Boolean,
+      a2: Boolean,
+      a3: Boolean
+    )
+
+    val actual = ExcelRowReads[R, Dummy].parse
+      .runReader(rows.head)
       .evalState(0)
+      .runEither
       .run
 
-    val expected = Valid(
-      List(
-        RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
-        RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
-      )
-    )
-    assert(actual == expected)
+    assert(actual.isLeft)
   }
 
-  it should "stop if `SkipOnlyEmpties` is put on the end" in new RealExcelSetUp {
-    val actual = ExcelSheetReads
-      .parse[R, Many[RealExcelDataModel], SkipOnlyEmpties]
-      .runReader(ApachePoiSheet(sheet))
+  it should "fail if the start is void row" in new RealExcelSetUp {
+    val voidRow = ApachePoiRow(sheet.getRow(2))
+    println(voidRow)
+
+    val actual = ExcelRowReads[R, RealExcelDataModel].parse
+      .runReader(voidRow)
       .evalState(0)
+      .runEither
       .run
 
-    val expected = Valid(
-      (
-        Seq(
-          RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
-          RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
-        ),
-        0 // Not define any rows after data
-      )
-    )
-    assert(actual == expected)
-  }
-
-  case class Header(
-    a1: String,
-    a2: String,
-    a3: Int,
-    a4: Boolean
-  )
-
-  trait RealExcelSetUp2 {
-    val workbook = WorkbookFactory.create(
-      new File(getClass.getResource("/test2.xlsx").getFile)
-    )
-    val sheet = workbook.getSheet("Sheet1")
-  }
-
-  it should "parse successfully" in new RealExcelSetUp2 {
-    val actual = ExcelSheetReads
-      .parse[R, Header, List[Int], Optional[Boolean], SkipOnlyEmpties, (String, String)]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    val expected = Valid(
-      (
-        Header("Hello", "Excel", 1, true),
-        List(1, 2, 3, 4, 5),
-        Some(true),
-        1,
-        ("Good", "Bye!")
-      )
-    )
-    assert(actual == expected)
-  }
-
-  "loop" should "parse data repeatedly" in new RealExcelSetUp {
-    val actual = ExcelSheetReads
-      .loop[R, RealExcelDataModel]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    val expected = Valid(
-      List(
-        RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
-        RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
-      )
-    )
-    assert(actual == expected)
-  }
-
-  it should "parse some data repeatedly" in new RealExcelSetUp {
-    val actual = ExcelSheetReads
-      .loop[R, RealExcelDataModel, RealExcelDataModel]
-      .runReader(ApachePoiSheet(sheet))
-      .evalState(0)
-      .run
-
-    val expected = Valid(
-      List(
-        (
-          RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
-          RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
-        )
-      )
-    )
-    assert(actual == expected)
+    assert(actual.isLeft)
   }
 }

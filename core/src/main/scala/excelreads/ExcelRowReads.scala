@@ -1,8 +1,7 @@
 package excelreads
 
 import cats.data.State
-import cats.data.ValidatedNel
-import excelreads.exception.ExcelParseError
+import excelreads.exception.ExcelParseError.ExcelParseErrors
 import excelreads.instance.ExcelRowReadsInstances
 import org.atnos.eff.Eff
 import org.atnos.eff.|=
@@ -16,20 +15,23 @@ import org.atnos.eff.|=
   */
 abstract class ExcelRowReads[R, A] {
   def parse(implicit
-    m: State[Int, *] |= R
-  ): Eff[R, ValidatedNel[ExcelParseError, A]]
+    m1: State[Int, *] |= R,
+    m2: Either[ExcelParseErrors, *] |= R
+  ): Eff[R, A]
 }
 
 object ExcelRowReads extends ExcelRowReadsInstances {
-
   def apply[R, A](implicit
     reads: ExcelRowReads[R, A]
   ): ExcelRowReads[R, A] = reads
 
   def from[R, A](
-    f: State[Int, *] |= R => Eff[R, ValidatedNel[ExcelParseError, A]]
+    f: State[Int, *] |= R => Either[ExcelParseErrors, *] |= R => Eff[R, A]
   ): ExcelRowReads[R, A] = new ExcelRowReads[R, A] {
-    def parse(implicit m: State[Int, *] |= R): Eff[R, ValidatedNel[ExcelParseError, A]] =
-      f(m)
+    def parse(implicit
+      m1: State[Int, *] |= R,
+      m2: Either[ExcelParseErrors, *] |= R
+    ): Eff[R, A] =
+      f(m1)(m2)
   }
 }

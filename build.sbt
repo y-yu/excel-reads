@@ -21,7 +21,8 @@ lazy val root =
       publish := {},
       publishLocal := {},
       publish / skip := true,
-      addCommandAlias("SetScala3", s"++ $scala3!")
+      addCommandAlias("SetScala3", s"++ $scala3!"),
+      addCommandAlias("SetScala2", s"++ $scala213!")
     )
     .aggregate(
       core,

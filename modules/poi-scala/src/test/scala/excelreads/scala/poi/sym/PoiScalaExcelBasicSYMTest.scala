@@ -1,20 +1,21 @@
 package excelreads.scala.poi.sym
 
 import cats.data.Reader
-import cats.data.Validated.Valid
+import cats.data.State
+import excelreads.exception.ExcelParseError.ExcelParseErrors
 import excelreads.scala.poi.PoiScalaRow
-import excelreads.util.TestUtils
 import info.folone.scala.poi.NumericCell
 import info.folone.scala.poi.Row
 import info.folone.scala.poi.StringCell
 import org.atnos.eff.Fx
 import org.scalatest.diagrams.Diagrams
 import org.scalatest.flatspec.AnyFlatSpec
+import org.atnos.eff.syntax.all.*
 
-class PoiScalaExcelBasicSYMTest extends AnyFlatSpec with Diagrams with TestUtils {
+class PoiScalaExcelBasicSYMTest extends AnyFlatSpec with Diagrams {
 
   val sut = new PoiScalaExcelBasicSYM[
-    Fx.fx1[Reader[PoiScalaRow, *]]
+    Fx.fx3[Reader[PoiScalaRow, *], State[Int, *], Either[ExcelParseErrors, *]]
   ]
 
   "getString" should "get `String` from the poi scala row" in {
@@ -24,8 +25,20 @@ class PoiScalaExcelBasicSYMTest extends AnyFlatSpec with Diagrams with TestUtils
         StringCell(1, "excel")
       )
     })
-    assert(runReader(sut.getString(0), row) == Valid(Some("hello")))
-    assert(runReader(sut.getString(1), row) == Valid(Some("excel")))
+    assert(
+      sut.getString
+        .evalState(0)
+        .runReader(row)
+        .runEither
+        .run == Right(Some("hello"))
+    )
+    assert(
+      sut.getString
+        .evalState(1)
+        .runReader(row)
+        .runEither
+        .run == Right(Some("excel"))
+    )
   }
 
   it should "return `None` if the cell is empty" in {
@@ -34,7 +47,13 @@ class PoiScalaExcelBasicSYMTest extends AnyFlatSpec with Diagrams with TestUtils
         StringCell(0, "hello")
       )
     })
-    assert(runReader(sut.getString(1), row) == Valid(None))
+    assert(
+      sut.getString
+        .evalState(1)
+        .runReader(row)
+        .runEither
+        .run == Right(None)
+    )
   }
 
   it should "return `Invalid` if the cell is not `String`" in {
@@ -43,7 +62,12 @@ class PoiScalaExcelBasicSYMTest extends AnyFlatSpec with Diagrams with TestUtils
         NumericCell(0, 1.0)
       )
     })
-    val actual = runReader(sut.getString(0), row)
-    assert(actual.isInvalid)
+    val actual = sut.getString
+      .evalState(0)
+      .runReader(row)
+      .runEither
+      .run
+
+    assert(actual.isLeft)
   }
 }

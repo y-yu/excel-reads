@@ -14,25 +14,17 @@ abstract class ExcelBasicSYM[F[_]: Monad] {
 
   /** Get `String` data in the cell
     */
-  def getString(
-    index: Int
-  ): F[ValidatedNel[ExcelParseError, Option[String]]]
+  def getString: F[Option[String]]
 
   /** Get `Double` data in the cell
     */
-  def getDouble(
-    index: Int
-  ): F[ValidatedNel[ExcelParseError, Option[Double]]]
+  def getDouble: F[Option[Double]]
 
   /** Get `Int` data in the cell
     */
-  def getInt(
-    index: Int
-  ): F[ValidatedNel[ExcelParseError, Option[Int]]]
+  def getInt: F[Option[Int]]
 
   /** Get `Boolean` data in the cell
     */
-  def getBoolean(
-    index: Int
-  ): F[ValidatedNel[ExcelParseError, Option[Boolean]]]
+  def getBoolean: F[Option[Boolean]]
 }
