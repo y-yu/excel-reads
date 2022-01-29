@@ -181,11 +181,11 @@ class ApachePoiExcelSheetReadsTest extends AnyFlatSpec with Diagrams {
     a4: Boolean
   )
 
-  trait RealExcelSetUp2 {
+  abstract class RealExcelSetUp2(sheetName: String = "Sheet1") {
     val workbook = WorkbookFactory.create(
       new File(getClass.getResource("/test2.xlsx").getFile)
     )
-    val sheet = workbook.getSheet("Sheet1")
+    val sheet = workbook.getSheet(sheetName)
   }
 
   it should "parse successfully" in new RealExcelSetUp2 {
@@ -239,6 +239,23 @@ class ApachePoiExcelSheetReadsTest extends AnyFlatSpec with Diagrams {
           RealExcelDataModel("Hello", Some("Excel"), 1.0, Nil),
           RealExcelDataModel("Goodbye", None, -10.0, List("b1", "b2", "b3"))
         )
+      )
+    )
+    assert(actual == expected)
+  }
+
+  it should "parse two data repeatedly" in new RealExcelSetUp2("Sheet2") {
+    val actual = ExcelSheetReads
+      .loop[R, List[String], List[Int]]
+      .runReader(ApachePoiSheet(sheet))
+      .evalState(0)
+      .runEither
+      .run
+
+    val expected = Right(
+      List(
+        (List("Hello", "Excel"), List(1, 2, 3)),
+        (List("This", "is", "a", "pen."), List(9, 8, 7, 6))
       )
     )
     assert(actual == expected)
