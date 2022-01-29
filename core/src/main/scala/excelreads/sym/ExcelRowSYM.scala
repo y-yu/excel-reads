@@ -1,19 +1,16 @@
 package excelreads.sym
 
 import cats.Monad
-import cats.data.State
 import excelreads.ExcelRowReads
+import excelreads.eff.ExcelReadsEffects.*
 import excelreads.exception.ExcelParseError.ExcelParseErrors
-import org.atnos.eff.|=
 
 /** Basic getter interface from an Excel row
   *
   * @tparam R
   *   Effect stack for parsing cells
   */
-abstract class ExcelRowSYM[Row, R, F[_]: Monad](implicit
-  m: State[Int, *] |= R
-) {
+abstract class ExcelRowSYM[Row, R: _state, F[_]: Monad] {
   def isEmpty: F[Boolean]
 
   def isEnd: F[Boolean]
