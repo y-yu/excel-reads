@@ -124,7 +124,6 @@ class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams {
 
   it should "fail if the start is void row" in new RealExcelSetUp {
     val voidRow = ApachePoiRow(sheet.getRow(2))
-    println(voidRow)
 
     val actual = ExcelRowReads[R, RealExcelDataModel].parse
       .runReader(voidRow)

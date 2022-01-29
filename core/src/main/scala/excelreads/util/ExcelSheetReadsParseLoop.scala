@@ -21,7 +21,6 @@ trait ExcelSheetReadsParseLoop {
     end: ExcelSheetReads[R, End]
   ): Eff[R, Seq[B]] =
     for {
-      index <- get
       isEnd <- end.parse
       // This `isEnd`s pattern-matching is not rewritable instead of `if`.
       // The type of `isEnd` is not `Boolean`, it's `end.Result`,

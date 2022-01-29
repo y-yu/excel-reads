@@ -17,6 +17,6 @@ abstract class ExcelRowSYM[Row, R, F[_]: Monad] {
   def getRow: F[Row]
 
   def withRow[A](
-    f: ExcelRowReads[R, A]
+    reads: ExcelRowReads[R, A]
   ): F[Either[ExcelParseErrors, A]]
 }
