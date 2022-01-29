@@ -13,7 +13,7 @@ import org.atnos.eff.reader.*
 /** Apache POI style sym implementation
   *
   * @tparam R
-  *   effects stack which contains `Reader[Row, *]`
+  *   effects stack
   */
 class ApachePoiExcelStyleSYM[R: _reader[ApachePoiRow, *]: _state: _either] extends ExcelStyleSYM[CellStyle, Eff[R, *]] {
 

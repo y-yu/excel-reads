@@ -19,7 +19,7 @@ import org.apache.poi.ss.usermodel.CellType
 /** Apache POI implementation
   *
   * @tparam R
-  *   effects stack which contains `Reader[Row, *]`
+  *   effects stack
   */
 class ApachePoiExcelBasicSYM[R: _reader[ApachePoiRow, *]: _state: _either] extends ExcelBasicSYM[Eff[R, *]] {
   private def failure[A](e: ExcelParseError): Eff[R, A] =
@@ -46,7 +46,7 @@ class ApachePoiExcelBasicSYM[R: _reader[ApachePoiRow, *]: _state: _either] exten
         case Some(a) =>
           try {
             pf
-              .andThen(a => a.pureEff[R])
+              .andThen(_.pureEff[R])
               .applyOrElse(
                 a,
                 (_: Cell) =>

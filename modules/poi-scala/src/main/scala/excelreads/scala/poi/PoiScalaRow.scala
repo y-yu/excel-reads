@@ -1,11 +1,10 @@
 package excelreads.scala.poi
 
-import cats.data.Reader
 import excelreads.scala.poi.sym.PoiScalaExcelBasicSYM
 import excelreads.sym.ExcelBasicSYM
 import info.folone.scala.poi.Row
 import org.atnos.eff.Eff
-import org.atnos.eff.|=
+import excelreads.eff.ExcelReadsEffects.*
 
 /** Wrapper class for Poi Scala `Row`
   *
@@ -19,8 +18,8 @@ case class PoiScalaRow(
 ) extends AnyVal
 
 object PoiScalaRow {
-  implicit def poiScalaSymInstances[R](implicit
-    m: Reader[PoiScalaRow, *] |= R
-  ): ExcelBasicSYM[Eff[R, *]] =
+  implicit def poiScalaSymInstances[
+    R: _reader[PoiScalaRow, *]: _state: _either
+  ]: ExcelBasicSYM[Eff[R, *]] =
     new PoiScalaExcelBasicSYM[R]
 }

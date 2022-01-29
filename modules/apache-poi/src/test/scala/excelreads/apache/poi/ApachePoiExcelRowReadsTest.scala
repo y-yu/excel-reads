@@ -2,10 +2,8 @@ package excelreads.apache.poi
 
 import cats.data.Reader
 import cats.data.State
-import cats.data.Validated.Valid
 import excelreads.ExcelRowReads
 import excelreads.exception.ExcelParseError.ExcelParseErrors
-import excelreads.util.TestUtils
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -16,7 +14,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import java.io.File
 import org.atnos.eff.syntax.all.*
 
-class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
+class ApachePoiExcelRowReadsTest extends AnyFlatSpec with Diagrams {
 
   type R = Fx.fx3[Reader[ApachePoiRow, *], State[Int, *], Either[ExcelParseErrors, *]]
 

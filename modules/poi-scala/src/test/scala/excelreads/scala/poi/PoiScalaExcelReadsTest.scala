@@ -2,10 +2,9 @@ package excelreads.scala.poi
 
 import cats.data.Reader
 import cats.data.State
-import cats.data.Validated.Valid
 import excelreads.ExcelRowReads
-import excelreads.util.TestUtils
-import org.atnos.eff.syntax.all._
+import excelreads.exception.ExcelParseError.ExcelParseErrors
+import org.atnos.eff.syntax.all.*
 import info.folone.scala.poi.BooleanCell
 import info.folone.scala.poi.NumericCell
 import info.folone.scala.poi.Row
@@ -17,9 +16,9 @@ import org.scalatest.flatspec.AnyFlatSpec
 import scalaz.-\/
 import scalaz.\/-
 
-class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
+class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams {
 
-  type R = Fx.fx2[Reader[PoiScalaRow, *], State[Int, *]]
+  type R = Fx.fx3[Reader[PoiScalaRow, *], State[Int, *], Either[ExcelParseErrors, *]]
 
   "reads" should "return `String` from the `Option[String]` instance" in {
     val row = PoiScalaRow(Row(0) {
@@ -32,7 +31,8 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       ExcelRowReads[R, String].parse
         .runReader(row)
         .evalState(0)
-        .run == Valid("hello")
+        .runEither
+        .run == Right("hello")
     )
   }
 
@@ -52,8 +52,9 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
     val actual = ExcelRowReads[R, HelloExcel].parse
       .runReader(row)
       .evalState(0)
+      .runEither
       .run
-    assert(actual == Valid(HelloExcel("hello", "excel")))
+    assert(actual == Right(HelloExcel("hello", "excel")))
   }
 
   it should "return a case class which has `List[Int]` from the Excel row" in {
@@ -72,8 +73,9 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
     val actual = ExcelRowReads[R, Numbers].parse
       .runReader(row)
       .evalState(0)
+      .runEither
       .run
-    assert(actual == Valid(Numbers(List(1, 2, 3))))
+    assert(actual == Right(Numbers(List(1, 2, 3))))
   }
 
   it should "parse the case class even if it has `Option[Boolean]`" in {
@@ -90,7 +92,8 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       ExcelRowReads[R, HasOption].parse
         .runReader(row1)
         .evalState(0)
-        .run == Valid(HasOption(Some(true)))
+        .runEither
+        .run == Right(HasOption(Some(true)))
     )
 
     val row2 = PoiScalaRow(Row(1) { Set.empty })
@@ -98,7 +101,8 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
       ExcelRowReads[R, HasOption].parse
         .runReader(row2)
         .evalState(0)
-        .run == Valid(HasOption(None))
+        .runEither
+        .run == Right(HasOption(None))
     )
   }
 
@@ -155,7 +159,8 @@ class PoiScalaExcelReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
         ExcelRowReads[R, RealExcelDataModel].parse
           .runReader(row)
           .evalState(0)
-          .run == Valid(expected)
+          .runEither
+          .run == Right(expected)
       )
     }
   }

@@ -20,6 +20,11 @@ import excelreads.eff.ExcelReadsEffects.*
 import excelreads.exception.ExcelParseError.ExcelParseErrors
 import excelreads.exception.ExcelParseError.UnexpectedCellInRow
 
+/** Apache POI's implementation of rows operation
+  *
+  * @tparam R
+  *   Effect stack for parsing rows
+  */
 class ApachePoiExcelRowSYM[
   R: _reader[ApachePoiSheet, *]: _state: _either
 ] extends ExcelRowSYM[ApachePoiRow, ApachePoiExcelReadsStack, Eff[R, *]] {
@@ -62,7 +67,7 @@ class ApachePoiExcelRowSYM[
           .evalState(0)
           .runEither
           .run
-          .leftMap { es: ExcelParseErrors =>
+          .leftMap { (es: ExcelParseErrors) =>
             NonEmptyList(UnexpectedCellInRow(index, es), Nil)
           }
           .pureEff[R]

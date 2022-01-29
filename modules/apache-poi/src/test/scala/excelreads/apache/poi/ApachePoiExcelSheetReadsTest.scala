@@ -5,7 +5,6 @@ import cats.data.State
 import excelreads.ExcelRowQuantifier.*
 import excelreads.ExcelSheetReads
 import excelreads.exception.ExcelParseError.ExcelParseErrors
-import excelreads.util.TestUtils
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -16,7 +15,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.atnos.eff.syntax.all.*
 import java.io.File
 
-class ApachePoiExcelSheetReadsTest extends AnyFlatSpec with Diagrams with TestUtils {
+class ApachePoiExcelSheetReadsTest extends AnyFlatSpec with Diagrams {
   type R = Fx.fx3[Reader[ApachePoiSheet, *], State[Int, *], Either[ExcelParseErrors, *]]
 
   trait SetUp {
@@ -209,7 +208,6 @@ class ApachePoiExcelSheetReadsTest extends AnyFlatSpec with Diagrams with TestUt
     assert(actual == expected)
   }
 
-  /*
   "loop" should "parse data repeatedly" in new RealExcelSetUp {
     val actual = ExcelSheetReads
       .loop[R, RealExcelDataModel]
@@ -226,8 +224,6 @@ class ApachePoiExcelSheetReadsTest extends AnyFlatSpec with Diagrams with TestUt
     )
     assert(actual == expected)
   }
-
-   */
 
   it should "parse some data repeatedly" in new RealExcelSetUp {
     val actual = ExcelSheetReads
