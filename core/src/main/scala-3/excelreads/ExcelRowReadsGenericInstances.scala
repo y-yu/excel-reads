@@ -24,11 +24,8 @@ trait ExcelRowReadsGenericInstances { self: ExcelRowReadsInstances =>
     }
 
   inline def deriveProduct[R, A](using inline a: Mirror.ProductOf[A]): ExcelRowReads[R, A] = {
-    def p: ExcelRowReads[R, A] = {
-      val xs = deriveRec[R, a.MirroredElemTypes]
-      productImpl[R, A](xs, a)
-    }
-    p
+    val xs = deriveRec[R, a.MirroredElemTypes]
+    productImpl[R, A](xs, a)
   }
 
   final def productImpl[R, A](xs: List[ExcelRowReads[R, _]], a: Mirror.ProductOf[A]): ExcelRowReads[R, A] = {
