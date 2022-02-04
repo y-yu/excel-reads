@@ -41,4 +41,5 @@ See also [tests](https://github.com/y-yu/excel-reads/tree/master/modules/apache-
 
 ## References
 
+- (Japanese) [Tagless-final + EffでExcelシートをパーズする](https://zenn.dev/yyu/articles/d7d965b661e158)
 - (Japanese) [Tagless-final + EffなScalaによるExcelパーザー](https://zenn.dev/yyu/articles/61799662c042ac)
