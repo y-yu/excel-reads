@@ -7,7 +7,7 @@ import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
 val defaultDependencyConfiguration = "test->test;compile->compile"
 
 val scala213 = "2.13.8"
-val scala3 = "3.1.1"
+val scala3 = "3.1.2"
 
 val isScala3 = Def.setting(
   CrossVersion.partialVersion(scalaVersion.value).exists(_._1 == 3)
@@ -39,12 +39,12 @@ lazy val core =
         if (scalaBinaryVersion.value == "3") {
           Nil
         } else {
-          Seq("com.chuusai" %% "shapeless" % "2.3.7")
+          Seq("com.chuusai" %% "shapeless" % "2.3.9")
         }
       },
       libraryDependencies ++= Seq(
-        "org.atnos" %% "eff" % "5.23.0",
-        "org.scalatest" %% "scalatest" % "3.2.12" % "test"
+        "org.scalatest" %% "scalatest" % "3.2.12" % "test",
+        "org.atnos" %% "eff" % "6.0.0"
       )
     )
     .settings(baseSettings ++ publishSettings)
@@ -56,7 +56,7 @@ lazy val poiScala =
       description := "Excel reads poi scala implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "info.folone" %% "poi-scala" % "0.20" cross CrossVersion.for3Use2_13
+        "info.folone" %% "poi-scala" % "0.22" cross CrossVersion.for3Use2_13
       )
     )
     .settings(baseSettings ++ publishSettings)
@@ -71,8 +71,8 @@ lazy val apachePoi =
       description := "Excel reads Apache POI implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "org.apache.poi" % "poi" % "5.2.0",
-        "org.apache.poi" % "poi-ooxml" % "5.2.0"
+        "org.apache.poi" % "poi" % "5.2.2",
+        "org.apache.poi" % "poi-ooxml" % "5.2.2"
       )
     )
     .settings(baseSettings ++ publishSettings)
