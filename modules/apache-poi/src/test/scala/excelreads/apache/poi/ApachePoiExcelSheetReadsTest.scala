@@ -44,7 +44,7 @@ class ApachePoiExcelSheetReadsTest extends AnyFlatSpec with Diagrams {
   }
 
   it should "return 100 `Int` rows" in new SetUp {
-    (0 until 100) foreach { i =>
+    0 until 100 foreach { i =>
       val row = sheet.createRow(i)
       val cell = row.createCell(0)
       cell.setCellValue(i.toDouble)
