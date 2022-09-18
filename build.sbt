@@ -39,7 +39,7 @@ lazy val core =
         if (scalaBinaryVersion.value == "3") {
           Nil
         } else {
-          Seq("com.chuusai" %% "shapeless" % "2.3.9")
+          Seq("com.chuusai" %% "shapeless" % "2.3.10")
         }
       },
       libraryDependencies ++= Seq(
