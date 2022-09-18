@@ -71,8 +71,8 @@ lazy val apachePoi =
       description := "Excel reads Apache POI implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "org.apache.poi" % "poi" % "5.2.2",
-        "org.apache.poi" % "poi-ooxml" % "5.2.2"
+        "org.apache.poi" % "poi" % "5.2.3",
+        "org.apache.poi" % "poi-ooxml" % "5.2.3"
       )
     )
     .settings(baseSettings ++ publishSettings)
