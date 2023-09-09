@@ -7,7 +7,7 @@ import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
 val defaultDependencyConfiguration = "test->test;compile->compile"
 
 val scala213 = "2.13.11"
-val scala3 = "3.3.0"
+val scala3 = "3.3.1"
 
 val isScala3 = Def.setting(
   CrossVersion.partialVersion(scalaVersion.value).exists(_._1 == 3)
