@@ -43,7 +43,7 @@ lazy val core =
         }
       },
       libraryDependencies ++= Seq(
-        "org.scalatest" %% "scalatest" % "3.2.17" % "test",
+        "org.scalatest" %% "scalatest" % "3.2.18" % "test",
         "org.atnos" %% "eff" % "7.0.1"
       )
     )
