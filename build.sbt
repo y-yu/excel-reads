@@ -44,7 +44,7 @@ lazy val core =
       },
       libraryDependencies ++= Seq(
         "org.scalatest" %% "scalatest" % "3.2.18" % "test",
-        "org.atnos" %% "eff" % "7.0.1"
+        "org.atnos" %% "eff" % "7.0.3"
       )
     )
     .settings(baseSettings ++ publishSettings)
