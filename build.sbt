@@ -6,7 +6,7 @@ import org.scalafmt.sbt.ScalafmtPlugin.autoImport._
 
 val defaultDependencyConfiguration = "test->test;compile->compile"
 
-val scala213 = "2.13.14"
+val scala213 = "2.13.15"
 val scala3 = "3.3.3"
 
 val isScala3 = Def.setting(
