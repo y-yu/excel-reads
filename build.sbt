@@ -56,7 +56,7 @@ lazy val poiScala =
       description := "Excel reads poi scala implementation",
       Test / unmanagedResourceDirectories += baseDirectory.value / ".." / "resources",
       libraryDependencies ++= Seq(
-        "info.folone" %% "poi-scala" % "0.24" cross CrossVersion.for3Use2_13
+        "info.folone" %% "poi-scala" % "0.25" cross CrossVersion.for3Use2_13
       )
     )
     .settings(baseSettings ++ publishSettings)
